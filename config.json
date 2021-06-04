@@ -1,0 +1,8 @@
+{   
+    "database":{
+        "username":"dbUser",
+        "password":"dbPassword",
+        "database_name":"online-academy"
+    }
+    
+}
