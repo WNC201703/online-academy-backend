@@ -2,6 +2,7 @@ const {User} = require("../models/user.model");
 const userModel= require("../models/user.model");
 const mailService =require('./mail.service');
 const ApiError = require('../utils/ApiError');
+const jwt = require('jsonwebtoken');
 
 const httpStatus = require('http-status')
 
@@ -67,6 +68,15 @@ const login = async (body) => {
 
     const success=await user.validatePassword(password);
     if  (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
+
+    const payload = {
+      email: user.email
+    }
+    const opts = {
+      expiresIn: 300 * 60 // seconds
+    }
+    const accessToken = jwt.sign(payload, 'online-academy-secret-key', opts);
+    return accessToken;
     // if (user.active == false) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
   }
   else {
