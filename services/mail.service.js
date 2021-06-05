@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const ApiError=require('../utils/ApiError');
 const httpStatus=require('http-status')
 
-const sendVerifyToken = (verify_token, email) => {
+const sendVerificationEmail = (verificationToken, email) => {
     let transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -15,7 +15,7 @@ const sendVerifyToken = (verify_token, email) => {
       from: 'onlineacademy208@gmail.com',
       to: email,
       subject: 'Thư gửi tự động để xác nhận email',
-      html: `<p>Vui lòng nhấn vào <a href="${process.env.API_URL}/users/verify/${verify_token}">${process.env.API_URL}/users/verify/${verify_token}</a> sau để xác nhận email</p>`,
+      html: `<p>Vui lòng nhấn vào <a href="${process.env.API_URL}/users/email/verify/${verificationToken}">${process.env.API_URL}/users/email/verify/${verificationToken}</a> sau để xác nhận email</p>`,
     };
 
     transporter.sendMail(mailOptions, (err, data) => {
@@ -27,4 +27,4 @@ const sendVerifyToken = (verify_token, email) => {
       });
   };
 
-  module.exports={sendVerifyToken};
+  module.exports={sendVerificationEmail};

@@ -1,6 +1,7 @@
 const validator = require('validator');
 const mongoose = require('mongoose');
-const ApiError = require('../utils/ApiError');
+const SALT_WORK_FACTOR = 10;
+const bcrypt = require('bcrypt');
 
 const userSchema = mongoose.Schema(
   {
@@ -17,7 +18,7 @@ const userSchema = mongoose.Schema(
       unique: true,
       validate(value) {
         if (!validator.isEmail(value)) {
-          throw Error('invalid email address');
+          throw Error('Invalid email address');
         }
       },
     },
@@ -32,39 +33,44 @@ const userSchema = mongoose.Schema(
     },
     active: {
       type: Boolean,
+      required:true,
       default: false
     },
-    verify_token: {
+    verification_token: {
       type: String,
-    }
+    },
   },
 );
 
-userSchema.statics.emailAlreadyInUse = async function (email) {
-  const user = await this.findOne({ email: email,active:true });
-  return !!user;
-};
-
-userSchema.statics.getInactiveAccount = async function (email) {
-  const user = await this.findOne({ email: email,active:false });
-  return user;
-};
-
-
-userSchema.statics.verify = async function (token) {
-  const user = await this.findOne({ verify_token: token });
-  
-  if (!!user) {
-    user.active=true;
-    user.verify_token='';
-    user.save();
-
-    console.log(user);
+userSchema.pre('save', async function save(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    this.password = await bcrypt.hash(this.password, SALT_WORK_FACTOR);
+    return next();
+  } catch (err) {
+    return next(err);
   }
-  if (!!user && user.active)  return true;
-  return false;
+});
+
+userSchema.methods.validatePassword = async function validatePassword(pw) {
+  return bcrypt.compare(pw, this.password);
 };
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+
+async function isEmailTaken(email) {
+  const user = await User.findOne({ email: email });
+  return !!user;
+};
+
+async function getUserByEmail(email) {
+  const user = await User.findOne({ email: email });
+  return user;
+};
+
+module.exports = {
+  User,
+  isEmailTaken,
+  getUserByEmail
+};
