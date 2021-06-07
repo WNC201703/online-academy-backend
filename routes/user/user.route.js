@@ -2,7 +2,6 @@ const express = require('express');
 const httpStatus = require("http-status");
 const router = express.Router();
 const userService = require('../../services/user.service');
-const ApiError = require('../../utils/ApiError');
 const asyncHandler = require('../../utils/asyncHandler')
 const auth = require('../../middlewares/auth.mdw');
 
@@ -22,12 +21,12 @@ router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
 
 
 router.post('/login', asyncHandler(async (req, res, next) => {
-  const accessToken = await userService.login(req.body);
+  const {user,accessToken,} = await userService.login(req.body);
   if (!!accessToken)
     return res.status(httpStatus.OK).json({
       authenticated: true,
+      user,
       accessToken,
-
     });
   else
     return res.status(httpStatus.UNAUTHORIZED).json({ authenticated: false, });
@@ -59,5 +58,11 @@ router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
   const user=await userService.updateUserInfo(req.params.userId,req.body);
   return res.status(httpStatus.OK).json({user});
 }));
+
+// router.post('/password/reset', auth(), asyncHandler(async (req, res, next) => {
+//   const {currentPassword,newPassword}=req.body;
+//   const user=await userService.resetPassword(currentPassword,newPassword);
+//   return res.status(httpStatus.OK).json({user});
+// }));
 
 module.exports = router;

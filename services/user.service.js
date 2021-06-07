@@ -76,7 +76,10 @@ async function login(body) {
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
     const accessToken = generateAccessToken(user.email, user._id);
 
-    return accessToken;
+    return {
+      user:user,
+      accessToken:accessToken
+    };
 
   }
   else {
@@ -104,6 +107,9 @@ async function updateUserInfo(userId, body) {
   return user;
 }
 
+// async function resetPassword(userId,currentPassword,newPassword) {
+
+// }
 
 
 
@@ -112,7 +118,7 @@ function generateAccessToken(email, id) {
     email: email,
     userId: id
   }
-  return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
+  return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '86400s' });
 }
 
 module.exports = {
@@ -122,5 +128,7 @@ module.exports = {
   login,
   getAllUsers,
   getUserById,
-  updateUserInfo
+  updateUserInfo,
+  // resetPassword
 }
+
