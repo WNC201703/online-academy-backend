@@ -80,11 +80,15 @@ async function getAllUsers(){
   const users= await User.find({active:true});
   return users;
 }
-
+async function updateUserInfo(userId,newData){
+  const user = await User.findByIdAndUpdate(userId,newData);
+  return user;
+}
 module.exports = {
   User,
   isEmailTaken,
   getUserByEmail,
   getAllUsers,
-  getUserById
+  getUserById,
+  updateUserInfo
 };

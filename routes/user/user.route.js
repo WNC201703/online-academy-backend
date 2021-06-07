@@ -55,5 +55,9 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
 
 }));
 
+router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
+  const user=await userService.updateUserInfo(req.params.userId,req.body);
+  return res.status(httpStatus.OK).json({user});
+}));
 
 module.exports = router;

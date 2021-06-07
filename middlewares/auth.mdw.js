@@ -11,6 +11,7 @@ module.exports = (requiredRole) => (req, res, next) => {
 
         try {
             const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+            
             if (!!requiredRole) {
                 const user = await userService.getUserById(decoded.userId);
                 if (!user) {
