@@ -19,10 +19,16 @@ async function createUser(email, fullname, password)  {
   const user = new User({
     fullname: fullname,
     email: email,
+    role:'student',
     password: password,
   });
   await user.save();
   return user;
+}
+
+async function getAllUsers(){
+  const users = await userModel.getAllUsers();
+  return users;
 }
 
 const sendVerificationEmail = async (email) => {
@@ -60,7 +66,7 @@ const verifyUserEmail = async (token) => {
   return false;
 };
 
-const login = async (body) => {
+ async function login(body) {
   const { email, password } = body;
   const user = await userModel.getUserByEmail(email);
   if (!!user) {
@@ -68,20 +74,27 @@ const login = async (body) => {
 
     const success=await user.validatePassword(password);
     if  (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
+    const accessToken=generateAccessToken(user.email,user._id);
 
-    const payload = {
-      email: user.email
-    }
-    const opts = {
-      expiresIn: 300 * 60 // seconds
-    }
-    const accessToken = jwt.sign(payload, 'online-academy-secret-key', opts);
     return accessToken;
-    // if (user.active == false) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
+   
   }
   else {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Email not exists");
   }
+}
+
+async function getUserById(userId){
+  const user = await userModel.getUserById(userId);
+  return user;
+}
+
+function generateAccessToken(email,id) {
+  const payload = {
+    email: email,
+    userId: id
+  }
+  return jwt.sign(payload,process.env.TOKEN_SECRET, { expiresIn: '1800s' });
 }
 
 module.exports = {
@@ -89,4 +102,6 @@ module.exports = {
   sendVerificationEmail,
   verifyUserEmail,
   login,
+  getAllUsers,
+  getUserById
 }

@@ -36,6 +36,10 @@ const userSchema = mongoose.Schema(
       required:true,
       default: false
     },
+    role:{
+      type:String,
+      required:true,
+    },
     verification_token: {
       type: String,
     },
@@ -68,9 +72,19 @@ async function getUserByEmail(email) {
   const user = await User.findOne({ email: email });
   return user;
 };
+async function getUserById(userId){
+  const user = await User.findById(userId, { __v: 0, password: 0 });
+  return user; 
+}
+async function getAllUsers(){
+  const users= await User.find({active:true});
+  return users;
+}
 
 module.exports = {
   User,
   isEmailTaken,
-  getUserByEmail
+  getUserByEmail,
+  getAllUsers,
+  getUserById
 };

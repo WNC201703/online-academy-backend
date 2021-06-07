@@ -21,8 +21,7 @@ const sendVerificationEmail = (verificationToken, email) => {
     transporter.sendMail(mailOptions, (err, data) => {
         if (err) {
           console.log(err.message);
-            return
-          // throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err.message);
+          throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err.message);
         }
       });
   };
