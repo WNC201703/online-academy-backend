@@ -1,9 +1,9 @@
 const express = require('express');
 const httpStatus = require("http-status");
 const router = express.Router();
-const userService = require('../../services/user.service');
-const asyncHandler = require('../../utils/asyncHandler')
-const auth = require('../../middlewares/auth.mdw');
+const userService = require('../services/user.service');
+const asyncHandler = require('../utils/asyncHandler')
+const auth = require('../middlewares/auth.mdw');
 
 //create a user
 router.post('/', asyncHandler(async (req, res, next) => {

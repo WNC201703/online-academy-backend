@@ -1,6 +1,4 @@
-const { User } = require("../models/category.model");
 const categoryModel = require("../models/category.model");
-const ApiError = require('../utils/ApiError');
 
 async function createCategory(parentId, title) {
     const category = await categoryModel.addNewCategory(parentId, title)

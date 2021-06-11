@@ -1,9 +1,9 @@
 const express = require('express');
 const httpStatus = require("http-status");
 const router = express.Router();
-const categoryService = require('../../services/category.service');
-const asyncHandler = require('../../utils/asyncHandler')
-const auth = require('../../middlewares/auth.mdw');
+const categoryService = require('../services/category.service');
+const asyncHandler = require('../utils/asyncHandler')
+const auth = require('../middlewares/auth.mdw');
 
 //create a category
 router.post('/', auth('admin'), asyncHandler(async (req, res, next) => {
