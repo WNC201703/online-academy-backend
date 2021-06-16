@@ -8,7 +8,7 @@ module.exports = (requiredRole) => (req, res, next) => {
     return new Promise(async (resolve, reject) => {
         try {
             const token=tokenService.getAccessToken(req);
-            const decoded = tokenService.verifyAndGetPayloadFromToken(token)
+            const decoded = tokenService.getPayloadFromToken(token)
 
             if (!!requiredRole) {
                 const user = await userService.getUserById(decoded.userId);

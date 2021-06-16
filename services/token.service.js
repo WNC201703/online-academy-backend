@@ -7,11 +7,17 @@ const getAccessToken = (req) => {
     return token;
 }
 
-const verifyAndGetPayloadFromToken = (token) => {
+const getPayloadFromToken = (token) => {
+    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    return decoded;
+}
+const getPayloadFromRequest = (req) => {
+    const token=getAccessToken(req);
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
     return decoded;
 }
 module.exports = {
-    verifyAndGetPayloadFromToken,
+    getPayloadFromToken,
+    getPayloadFromRequest,
     getAccessToken
 }
