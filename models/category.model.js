@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 const categorySchema = mongoose.Schema(
     {
-        parentId: {
-            type: String,
-        },
+        parent: 
+            { type: ObjectId, ref: 'Category'},
         title: {
             type: String,
             trim: true,
@@ -30,10 +30,9 @@ async function updateCategory(categoryId, newData) {
     return updatedCategory;
 }
 
-async function addNewCategory(parentId, title) {
-    console.log(parentId);
+async function addNewCategory(parent, title) {
     const newCategory = new Category({
-        parentId: parentId,
+        parent: parent,
         title: title
     });
     await newCategory.save();
@@ -45,8 +44,8 @@ async function deleteCategory(categoryId) {
     return newCategory;
 }
 
-async function getCategoriesByParentId(parentId) {
-    const categories = await Category.find({ parentId: mongoose.Types.ObjectId(parentId) });
+async function getCategoriesByparent(parent) {
+    const categories = await Category.find({ parent: mongoose.Types.ObjectId(parent) });
     return categories;
 }
 
@@ -55,5 +54,5 @@ module.exports = {
     getCategoryById,
     getAll,
     addNewCategory, deleteCategory, updateCategory,
-    getCategoriesByParentId
+    getCategoriesByparent
 };

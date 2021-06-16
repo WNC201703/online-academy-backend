@@ -18,9 +18,9 @@ router.post('/', auth('teacher'), asyncHandler(async (req, res, next) => {
 
 //get courses
 router.get('/', asyncHandler(async (req, res, next) => {
-    const parentId = req.query.parentId;
-    if (!!parentId) {
-        const courses = await courseService.getCoursesByParentId(parentId);
+    const parent = req.query.parent;
+    if (!!parent) {
+        const courses = await courseService.getCoursesByparent(parent);
         return res.status(httpStatus.OK).json(courses);
     }
     const courses = await courseService.getCourses();

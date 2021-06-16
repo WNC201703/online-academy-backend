@@ -1,7 +1,7 @@
 const categoryModel = require("../models/category.model");
 
-async function createCategory(parentId, title) {
-    const category = await categoryModel.addNewCategory(parentId, title)
+async function createCategory(parent, title) {
+    const category = await categoryModel.addNewCategory(parent, title)
     return category;
 }
 
@@ -10,8 +10,8 @@ async function getCategoryById(categoryId) {
     return category;
 }
 
-async function getCategoriesByParentId(parentId) {
-    const categories = await categoryModel.getCategoriesByParentId(parentId)
+async function getCategoriesByparent(parent) {
+    const categories = await categoryModel.getCategoriesByparent(parent)
     return categories;
 }
 
@@ -33,7 +33,7 @@ async function deleteCategory(categoryId) {
 module.exports = {
     createCategory,
     getCategoryById,
-    getCategoriesByParentId,
+    getCategoriesByparent,
     deleteCategory,
     getCategories,
     updateCategory, 

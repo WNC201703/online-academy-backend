@@ -69,6 +69,11 @@ async function getAll() {
     const courses = await Course.find();
     return courses;
 }
+
+async function getCoursesByCategory(categoryId) {
+    const courses = await Course.find({category:categoryId});
+    return courses;
+}
 async function updateCourse(courseId, teacherId, newData) {
     const course=await Course.findByIdAndUpdate(courseId, newData);
     const updatedCourse = await Course.findById(courseId, { __v: 0 });
@@ -89,5 +94,6 @@ module.exports = {
     getCourseById,
     getAll,
     addNewCourse, deleteCourse, updateCourse,
-    checkPermission
+    checkPermission,
+    getCoursesByCategory
 };

@@ -19,6 +19,11 @@ async function getCourses() {
     return courses;
 }
 
+async function getCoursesByCategory(categoryId) {
+    const courses = await courseModel.getCoursesByCategory(categoryId);
+    return courses;
+}
+
 async function updateCourse(courseId, teacherId, body) {
     const permission=await courseModel.checkPermission(courseId,teacherId);
     if (!permission)  throw new ApiError(httpStatus.FORBIDDEN, "Access is denied"); 
@@ -38,6 +43,7 @@ module.exports = {
     deleteCourse,
     getCourses,
     updateCourse,
+    getCoursesByCategory
 
 }
 
