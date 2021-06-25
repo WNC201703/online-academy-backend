@@ -27,9 +27,21 @@ async function getCoursesByCategory(categoryId) {
     return courses;
 }
 
-async function getCourses(pageNumber, pageSize) {
-   
-    const result = await courseModel.getCourses(pageNumber,pageSize);
+async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
+    let sorts=[];
+    let keyword={};
+    if (sortBy){
+        const arr = sortBy.split(',');
+        arr.forEach(item => {
+            const spl = item.split('.');
+            const obj={};
+            obj[spl[0]] = spl[1] === 'desc' ? -1:1;
+            console.log(obj);
+            sorts.push(obj);
+        });
+    }
+    console.log(sorts);
+    const result = await courseModel.getCourses(pageNumber,pageSize,sorts);
     return result;
 }
 
