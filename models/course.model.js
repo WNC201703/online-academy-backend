@@ -37,6 +37,10 @@ const courseSchema = mongoose.Schema(
             default:
                 0
         },
+        view: {
+            type: Number,
+            default:0
+        },
 
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
@@ -62,7 +66,13 @@ async function addNewCourse(teacherId, body) {
 }
 
 async function getCourseById(courseId) {
-    const course = await Course.findById(courseId, { __v: 0, password: 0 });
+    let course = await Course.findById(courseId);
+    try{
+        course.view++;
+        course.save();
+    }catch(err){
+        console.log(err);
+    }
     return course;
 }
 async function getAll() {
