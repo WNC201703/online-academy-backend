@@ -27,7 +27,7 @@ async function getCoursesByCategory(categoryId) {
     return courses;
 }
 
-async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
+async function getCourses(pageNumber, pageSize, sortBy, keyWord,categoryId) {
     let sort={};
     if (sortBy){
         const arr = sortBy.split(',');
@@ -36,8 +36,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
             sort[spl[0]] = spl[1] === 'desc' ? -1:1;
         });
     }
-    console.log(sort);
-    const result = await courseModel.getCourses(pageNumber,pageSize,sort,keyWord);
+    const result = await courseModel.getCourses(pageNumber,pageSize,sort,keyWord,categoryId);
     return result;
 }
 

@@ -86,25 +86,27 @@ async function getCoursesByCategory(categories) {
     return courses;
 }
 
-async function getCourses(pageNumber, pageSize, sort, keyword) {
+async function getCourses(pageNumber, pageSize, sort, keyword, categoryId) {
     let regex = new RegExp(keyword, 'i');
+    let obj = {};
+    if (keyword) obj['name'] = regex;
+    if (categoryId) obj['category'] = categoryId;
     let courses, totalCount = 0;
     totalCount = await Course.countDocuments(
-        keyword ? {
-        name: regex
-    } : {});
+        obj
+    );
     courses = await Course.find(
-        keyword ? {
-            name: regex
-        } : {}
+        obj
     )
         .limit(pageSize)
-        .skip(pageNumber * pageSize)
+        .skip((pageNumber-1) * pageSize)
         .sort(sort);
+    const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount/pageSize);
     return {
-        "page_size": pageSize,
-        "page_number": pageNumber,
-        "total_result_count": totalCount,
+        "page_size": pageSize ? pageSize : totalCount,
+        "page_number": pageNumber ? pageNumber : 1,
+        "total_pages": pageSize ? totalPages : 1,
+        "total_results": totalCount,
         "results": courses
     };
 }
