@@ -35,16 +35,9 @@ router.get('/:categoryId', asyncHandler(async (req, res, next) => {
 );
 
 router.get('/:categoryId/courses', asyncHandler(async (req, res, next) => {
-    const categoryId = req.params.categoryId;
-    const { page_number, page_size } = req.query;
-    if (page_number && page_size) {
-        const results = await courseService.getCourses(+page_number, +page_size);
-        return res.status(httpStatus.OK).json(results);
-    }
-    else {
-        const courses = await courseService.getCoursesByCategory(categoryId);
-        return res.status(httpStatus.OK).json(courses);
-    }
+    const { page_number, page_size, sort_by, key_word } = req.query;
+    const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word,req.params.categoryId);
+    return res.status(httpStatus.OK).json(results);
 })
 );
 

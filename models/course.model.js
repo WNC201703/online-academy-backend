@@ -86,11 +86,11 @@ async function getCoursesByCategory(categories) {
     return courses;
 }
 
-async function getCourses(pageNumber, pageSize, sort, keyword, categoryId) {
+async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
     let regex = new RegExp(keyword, 'i');
     let obj = {};
     if (keyword) obj['name'] = regex;
-    if (categoryId) obj['category'] = categoryId;
+    if (categories) obj['category'] = { "$in": categories };
     let courses, totalCount = 0;
     totalCount = await Course.countDocuments(
         obj
