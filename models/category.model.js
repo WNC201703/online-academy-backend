@@ -49,10 +49,37 @@ async function getCategoriesByparent(parent) {
     return categories;
 }
 
+async function getChildren(categoryId){
+    const parent = await Category.aggregate([
+        {
+            $sort: { order: 1 }
+        },
+        {
+            $graphLookup: {
+                from: 'categories',
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'parent',
+                as: 'children',
+            }
+        },
+        {
+            $match: {
+                _id: mongoose.Types.ObjectId(categoryId)
+            }
+        }
+    ]);
+    const categories=[parent[0],...parent[0].children];
+    return categories;
+}
+
 module.exports = {
     Category,
     getCategoryById,
     getAll,
-    addNewCategory, deleteCategory, updateCategory,
-    getCategoriesByparent
+    addNewCategory, 
+    deleteCategory, 
+    updateCategory,
+    getCategoriesByparent,
+    getChildren
 };

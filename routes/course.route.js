@@ -9,18 +9,18 @@ const tokenService = require('../services/token.service')
 //create a course
 router.post('/', auth('teacher'), asyncHandler(async (req, res, next) => {
     console.log('post');
-    const decoded= tokenService.getPayloadFromRequest(req);
-    const teacherId=decoded.userId;
-    const course = await courseService.createCourse(req.body,teacherId);
+    const decoded = tokenService.getPayloadFromRequest(req);
+    const teacherId = decoded.userId;
+    const course = await courseService.createCourse(req.body, teacherId);
     return res.status(httpStatus.CREATED).json(course);
 })
 );
 
 //get courses
 router.get('/', asyncHandler(async (req, res, next) => {
-    const parent = req.query.parent;
-    if (!!parent) {
-        const courses = await courseService.getCoursesByparent(parent);
+    const category = req.query.category;
+    if (!!category) {
+        const courses = await courseService.getCoursesByCategory(category);
         return res.status(httpStatus.OK).json(courses);
     }
     const courses = await courseService.getCourses();
@@ -35,11 +35,12 @@ router.get('/:courseId', asyncHandler(async (req, res, next) => {
 })
 );
 
+
 router.put('/:courseId', auth('teacher'), auth(), asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
-    const decoded= tokenService.getPayloadFromRequest(req);
-    const teacherId=decoded.userId;
-    const course = await courseService.updateCourse(courseId,teacherId,req.body);
+    const decoded = tokenService.getPayloadFromRequest(req);
+    const teacherId = decoded.userId;
+    const course = await courseService.updateCourse(courseId, teacherId, req.body);
     return res.status(httpStatus.OK).json(course);
 }));
 

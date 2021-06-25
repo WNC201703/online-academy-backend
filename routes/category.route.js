@@ -42,7 +42,7 @@ router.get('/:categoryId/courses', asyncHandler(async (req, res, next) => {
 })
 );
 
-router.put('/:categoryId', auth('admin'), auth(), asyncHandler(async (req, res, next) => {
+router.put('/:categoryId', auth('admin'),asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
     console.log(categoryId);
     const category = await categoryService.updateCategory(categoryId, req.body);

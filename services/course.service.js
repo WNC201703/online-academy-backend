@@ -1,5 +1,6 @@
 const courseModel = require("../models/course.model");
-const { Course } = courseModel;
+const categoryModel = require("../models/category.model");
+const {Category} = categoryModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status')
 async function createCourse(body, teacherId) {
@@ -20,7 +21,8 @@ async function getCourses() {
 }
 
 async function getCoursesByCategory(categoryId) {
-    const courses = await courseModel.getCoursesByCategory(categoryId);
+    const categories=await categoryModel.getChildren(categoryId);
+    const courses = await courseModel.getCoursesByCategory(categories);
     return courses;
 }
 

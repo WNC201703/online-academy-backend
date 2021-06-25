@@ -70,8 +70,8 @@ async function getAll() {
     return courses;
 }
 
-async function getCoursesByCategory(categoryId) {
-    const courses = await Course.find({category:categoryId});
+async function getCoursesByCategory(categories) {
+    const courses = await Course.find({category:{"$in":categories}});
     return courses;
 }
 async function updateCourse(courseId, teacherId, newData) {
