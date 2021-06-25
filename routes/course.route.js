@@ -24,6 +24,12 @@ router.get('/', asyncHandler(async (req, res, next) => {
 })
 );
 
+//get popular courses
+router.get('/popular', asyncHandler(async (req, res, next) => {
+    const courses = await courseService.getPopularCourses();
+    return res.status(httpStatus.OK).json(courses);
+})
+);
 
 router.get('/:courseId', asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;

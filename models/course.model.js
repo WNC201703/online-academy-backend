@@ -81,6 +81,12 @@ async function getAll() {
     return courses;
 }
 
+async function getPopularCourses() {
+    const courses = await Course.find();
+    return courses;
+}
+
+
 async function getCoursesByCategory(categories) {
     const courses = await Course.find({ category: { "$in": categories } });
     return courses;
@@ -99,9 +105,9 @@ async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
         obj
     )
         .limit(pageSize)
-        .skip((pageNumber-1) * pageSize)
+        .skip((pageNumber - 1) * pageSize)
         .sort(sort);
-    const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount/pageSize);
+    const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
     return {
         "page_size": pageSize ? pageSize : totalCount,
         "page_number": pageNumber ? pageNumber : 1,
@@ -133,5 +139,6 @@ module.exports = {
     addNewCourse, deleteCourse, updateCourse,
     checkPermission,
     getCoursesByCategory,
-    getCourses
+    getCourses,
+    getPopularCourses
 };
