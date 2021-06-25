@@ -27,9 +27,8 @@ async function getCoursesByCategory(categoryId) {
     return courses;
 }
 
-async function getCourses(categoryId, pageNumber, pageSize) {
-    // let categories=[];
-    // if (categoryId) categories = await categoryModel.getChildren(categoryId);
+async function getCourses(pageNumber, pageSize) {
+   
     const result = await courseModel.getCourses(pageNumber,pageSize);
     return result;
 }

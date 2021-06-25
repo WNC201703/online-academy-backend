@@ -36,14 +36,20 @@ router.get('/:categoryId', asyncHandler(async (req, res, next) => {
 
 router.get('/:categoryId/courses', asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
-    // const categories = categoryService.getCategoriesByparent();
-    const courses = await courseService.getCoursesByCategory(categoryId);
-    return res.status(httpStatus.OK).json(courses);
+    const { page_number, page_size } = req.query;
+    if (page_number && page_size) {
+        const results = await courseService.getCourses(+page_number, +page_size);
+        return res.status(httpStatus.OK).json(results);
+    }
+    else {
+        const courses = await courseService.getCoursesByCategory(categoryId);
+        return res.status(httpStatus.OK).json(courses);
+    }
 })
 );
 
 
-router.put('/:categoryId', auth('admin'),asyncHandler(async (req, res, next) => {
+router.put('/:categoryId', auth('admin'), asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
     console.log(categoryId);
     const category = await categoryService.updateCategory(categoryId, req.body);

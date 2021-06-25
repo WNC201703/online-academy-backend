@@ -86,18 +86,18 @@ async function getCoursesByCategory(categories) {
     return courses;
 }
 
-async function getCourses(page, perPage) {
+async function getCourses(pageNumber, pageSize) {
     let courses,totalCount=0;
     // if (categories.length === 0) {
         totalCount= await Course.countDocuments();
-        courses = await Course.find().limit(perPage).skip(page * perPage);
+        courses = await Course.find().limit(pageSize).skip(pageNumber * pageSize);
     // } else {
     //     totalCount= await Course.countDocuments({ category: { "$in": categories } });
     //     courses = await Course.find({ category: { "$in": categories } }).limit(perPage).skip(page * perPage);
     // }
     return {
-        "page_size":perPage,
-        "page_number":page,
+        "page_size":pageSize,
+        "page_number":pageNumber,
         "total_result_count": totalCount,
         "results":courses
     };
