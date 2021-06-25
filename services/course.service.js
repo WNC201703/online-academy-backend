@@ -28,20 +28,17 @@ async function getCoursesByCategory(categoryId) {
 }
 
 async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
-    let sorts=[];
+    let sort={};
     let keyword={};
     if (sortBy){
         const arr = sortBy.split(',');
         arr.forEach(item => {
             const spl = item.split('.');
-            const obj={};
-            obj[spl[0]] = spl[1] === 'desc' ? -1:1;
-            console.log(obj);
-            sorts.push(obj);
+            sort[spl[0]] = spl[1] === 'desc' ? -1:1;
         });
     }
-    console.log(sorts);
-    const result = await courseModel.getCourses(pageNumber,pageSize,sorts);
+    console.log(sort);
+    const result = await courseModel.getCourses(pageNumber,pageSize,sort);
     return result;
 }
 
