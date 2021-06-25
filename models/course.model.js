@@ -93,6 +93,13 @@ async function getLatestCourses() {
     return courses;
 }
 
+async function getTopViewedCourses() {
+    const courses = await Course.find().sort({
+        view: -1
+    }).limit(10);
+    return courses;
+}
+
 
 async function getCoursesByCategory(categories) {
     const courses = await Course.find({ category: { "$in": categories } });
@@ -148,5 +155,6 @@ module.exports = {
     getCoursesByCategory,
     getCourses,
     getPopularCourses,
-    getLatestCourses
+    getLatestCourses,
+    getTopViewedCourses,
 };

@@ -38,6 +38,13 @@ router.get('/latest', asyncHandler(async (req, res, next) => {
 })
 );
 
+//get top viewed courses
+router.get('/top_viewed', asyncHandler(async (req, res, next) => {
+    const courses = await courseService.getTopViewedCourses();
+    return res.status(httpStatus.OK).json(courses);
+})
+);
+
 router.get('/:courseId', asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const course = await courseService.getCourseById(courseId);
