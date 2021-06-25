@@ -86,15 +86,26 @@ async function getCoursesByCategory(categories) {
     return courses;
 }
 
-async function getCourses(pageNumber, pageSize,sort) {
-    let courses,totalCount=0;
-        totalCount= await Course.countDocuments();
-        courses = await Course.find().limit(pageSize).skip(pageNumber * pageSize).sort(sort);
+async function getCourses(pageNumber, pageSize, sort, keyword) {
+    let regex = new RegExp(keyword, 'i');
+    let courses, totalCount = 0;
+    totalCount = await Course.countDocuments(
+        keyword ? {
+        name: regex
+    } : {});
+    courses = await Course.find(
+        keyword ? {
+            name: regex
+        } : {}
+    )
+        .limit(pageSize)
+        .skip(pageNumber * pageSize)
+        .sort(sort);
     return {
-        "page_size":pageSize,
-        "page_number":pageNumber,
+        "page_size": pageSize,
+        "page_number": pageNumber,
         "total_result_count": totalCount,
-        "results":courses
+        "results": courses
     };
 }
 

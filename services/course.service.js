@@ -29,7 +29,6 @@ async function getCoursesByCategory(categoryId) {
 
 async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
     let sort={};
-    let keyword={};
     if (sortBy){
         const arr = sortBy.split(',');
         arr.forEach(item => {
@@ -38,7 +37,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyWord) {
         });
     }
     console.log(sort);
-    const result = await courseModel.getCourses(pageNumber,pageSize,sort);
+    const result = await courseModel.getCourses(pageNumber,pageSize,sort,keyWord);
     return result;
 }
 
