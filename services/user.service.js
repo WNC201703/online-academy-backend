@@ -107,10 +107,9 @@ async function updateUserInfo(userId, body) {
   return user;
 }
 
-// async function resetPassword(userId,currentPassword,newPassword) {
+async function resetPassword(userId,currentPassword,newPassword) {
 
-// }
-
+}
 
 
 function generateAccessToken(email, id) {
@@ -129,6 +128,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUserInfo,
-  // resetPassword
+  resetPassword,
+  // join
 }
 
