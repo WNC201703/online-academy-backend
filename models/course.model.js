@@ -39,7 +39,7 @@ const courseSchema = mongoose.Schema(
         },
         view: {
             type: Number,
-            default:0
+            default: 0
         },
 
         createdAt: { type: Date, default: Date.now },
@@ -67,25 +67,44 @@ async function addNewCourse(teacherId, body) {
 
 async function getCourseById(courseId) {
     let course = await Course.findById(courseId);
-    try{
+    try {
         course.view++;
         course.save();
-    }catch(err){
+    } catch (err) {
         console.log(err);
     }
     return course;
 }
+
 async function getAll() {
     const courses = await Course.find();
     return courses;
 }
 
 async function getCoursesByCategory(categories) {
-    const courses = await Course.find({category:{"$in":categories}});
+    const courses = await Course.find({ category: { "$in": categories } });
     return courses;
 }
+
+async function getCourses(categories, page, perPage) {
+    let courses,totalCount=0;
+    if (categories.length === 0) {
+        totalCount= await Course.countDocuments();
+        courses = await Course.find().limit(perPage).skip(page * perPage);
+    } else {
+        totalCount= await Course.countDocuments({ category: { "$in": categories } });
+        courses = await Course.find({ category: { "$in": categories } }).limit(perPage).skip(page * perPage);
+    }
+    return {
+        "page_size":perPage,
+        "page_number":page,
+        "total_result_count": totalCount,
+        "results":courses
+    };
+}
+
 async function updateCourse(courseId, newData) {
-    const course=await Course.findByIdAndUpdate(courseId, newData);
+    const course = await Course.findByIdAndUpdate(courseId, newData);
     const updatedCourse = await Course.findById(courseId, { __v: 0 });
     return updatedCourse;
 }
@@ -94,7 +113,7 @@ async function deleteCourse(courseId) {
     return newCourse;
 }
 
-async function checkPermission(courseId, teacherId){
+async function checkPermission(courseId, teacherId) {
     const course = await Course.findOne({ _id: courseId, teacher: teacherId },);
     return !!course;
 }
@@ -105,5 +124,6 @@ module.exports = {
     getAll,
     addNewCourse, deleteCourse, updateCourse,
     checkPermission,
-    getCoursesByCategory
+    getCoursesByCategory,
+    getCourses
 };

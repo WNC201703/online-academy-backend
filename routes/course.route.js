@@ -18,13 +18,19 @@ router.post('/', auth('teacher'), asyncHandler(async (req, res, next) => {
 
 //get courses
 router.get('/', asyncHandler(async (req, res, next) => {
-    const category = req.query.category;
-    if (!!category) {
-        const courses = await courseService.getCoursesByCategory(category);
-        return res.status(httpStatus.OK).json(courses);
-    }
+
     const courses = await courseService.getCourses();
     return res.status(httpStatus.OK).json(courses);
+})
+);
+
+
+router.get('/index', asyncHandler(async (req, res, next) => {
+    const page = +req.query.page_number;
+    const per_page = +req.query.page_size;
+    const category = req.query.category;
+    const results = await courseService.getCoursesByQueryParams(category,page,per_page);
+    return res.status(httpStatus.OK).json(results);
 })
 );
 

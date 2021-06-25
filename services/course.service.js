@@ -1,6 +1,6 @@
 const courseModel = require("../models/course.model");
 const categoryModel = require("../models/category.model");
-const {Category} = categoryModel;
+const { Category } = categoryModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const enrollmentModel = require("../models/enrollment.model");
@@ -22,14 +22,21 @@ async function getCourses() {
 }
 
 async function getCoursesByCategory(categoryId) {
-    const categories=await categoryModel.getChildren(categoryId);
+    const categories = await categoryModel.getChildren(categoryId);
     const courses = await courseModel.getCoursesByCategory(categories);
     return courses;
 }
 
+async function getCoursesByQueryParams(categoryId, page, perPage) {
+    let categories=[];
+    if (categoryId) categories = await categoryModel.getChildren(categoryId);
+    const result = await courseModel.getCourses(categories,page,perPage);
+    return result;
+}
+
 async function updateCourse(courseId, teacherId, body) {
-    const permission=await courseModel.checkPermission(courseId,teacherId);
-    if (!permission)  throw new ApiError(httpStatus.FORBIDDEN, "Access is denied"); 
+    const permission = await courseModel.checkPermission(courseId, teacherId);
+    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
     const course = await courseModel.updateCourse(courseId, body);
     return course;
 }
@@ -39,10 +46,10 @@ async function deleteCourse(courseId) {
     return course;
 }
 
-async function enrollStudent(courseId,studentId) {
-    const exists=await enrollmentModel.exists(courseId,studentId);
+async function enrollStudent(courseId, studentId) {
+    const exists = await enrollmentModel.exists(courseId, studentId);
     if (exists) throw new ApiError(httpStatus.BAD_REQUEST, "Student enrolled in the course");
-    const erollment = await enrollmentModel.add(courseId,studentId);
+    const erollment = await enrollmentModel.add(courseId, studentId);
     return erollment;
 }
 
@@ -53,7 +60,8 @@ module.exports = {
     getCourses,
     updateCourse,
     getCoursesByCategory,
-    enrollStudent
+    enrollStudent,
+    getCoursesByQueryParams
 
 }
 
