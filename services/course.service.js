@@ -27,6 +27,11 @@ async function getPopularCourses() {
     return courses;
 }
 
+async function getLatestCourses() {
+    const courses = await courseModel.getLatestCourses();
+    return courses;
+}
+
 async function getCoursesByCategory(categoryId) {
     const categories = await categoryModel.getChildren(categoryId);
     const courses = await courseModel.getCoursesByCategory(categories);
@@ -75,7 +80,8 @@ module.exports = {
     updateCourse,
     getCoursesByCategory,
     enrollStudent,
-    getPopularCourses
+    getPopularCourses,
+    getLatestCourses
 
 }
 

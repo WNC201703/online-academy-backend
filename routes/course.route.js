@@ -31,6 +31,13 @@ router.get('/popular', asyncHandler(async (req, res, next) => {
 })
 );
 
+//get most newly created courses
+router.get('/latest', asyncHandler(async (req, res, next) => {
+    const courses = await courseService.getLatestCourses();
+    return res.status(httpStatus.OK).json(courses);
+})
+);
+
 router.get('/:courseId', asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const course = await courseService.getCourseById(courseId);
