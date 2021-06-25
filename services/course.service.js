@@ -16,7 +16,7 @@ async function getCourseById(courseId) {
 }
 
 
-async function getCourses() {
+async function getAll() {
     const courses = await courseModel.getAll();
     return courses;
 }
@@ -27,10 +27,10 @@ async function getCoursesByCategory(categoryId) {
     return courses;
 }
 
-async function getCoursesByQueryParams(categoryId, page, perPage) {
-    let categories=[];
-    if (categoryId) categories = await categoryModel.getChildren(categoryId);
-    const result = await courseModel.getCourses(categories,page,perPage);
+async function getCourses(categoryId, pageNumber, pageSize) {
+    // let categories=[];
+    // if (categoryId) categories = await categoryModel.getChildren(categoryId);
+    const result = await courseModel.getCourses(pageNumber,pageSize);
     return result;
 }
 
@@ -55,13 +55,14 @@ async function enrollStudent(courseId, studentId) {
 
 module.exports = {
     createCourse,
+    getAll,
     getCourseById,
     deleteCourse,
     getCourses,
     updateCourse,
     getCoursesByCategory,
     enrollStudent,
-    getCoursesByQueryParams
+    
 
 }
 
