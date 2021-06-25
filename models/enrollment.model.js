@@ -8,6 +8,7 @@ const enrollmentSchema = mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
     },
 );
+enrollmentSchema.index({ course: 1, student: 1 }, { unique: true })
 
 const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
 
@@ -18,6 +19,11 @@ async function add(courseId,studentId) {
     });
     await newEnrollment.save();
     return newEnrollment;
+}
+
+async function exists(courseId,studentId) {
+    const enrollment = await Enrollment.find({student:studentId,courseId:courseId});
+    return !!enrollment;
 }
 
 async function getByCourseId(courseId) {
@@ -33,6 +39,7 @@ async function getByStudentId(studentId) {
 module.exports = {
     Enrollment,
     add,
+    exists,
     getByCourseId,
     getByStudentId,
 };

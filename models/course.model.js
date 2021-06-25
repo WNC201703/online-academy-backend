@@ -74,7 +74,7 @@ async function getCoursesByCategory(categories) {
     const courses = await Course.find({category:{"$in":categories}});
     return courses;
 }
-async function updateCourse(courseId, teacherId, newData) {
+async function updateCourse(courseId, newData) {
     const course=await Course.findByIdAndUpdate(courseId, newData);
     const updatedCourse = await Course.findById(courseId, { __v: 0 });
     return updatedCourse;

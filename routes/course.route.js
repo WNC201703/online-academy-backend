@@ -50,4 +50,12 @@ router.delete('/:courseId', auth('teacher'), asyncHandler(async (req, res, next)
     return res.status(httpStatus.OK).json(course);
 }));
 
+router.post('/:courseId/enrollments', auth(), asyncHandler(async (req, res, next) => {
+    const { courseId, userId } = req.body;
+    if (req.params.courseId != courseId) return res.status(httpStatus.BAD_REQUEST).json();
+    const enrollment = await courseService.enrollStudent(courseId, userId);
+    return res.status(httpStatus.CREATED).json(enrollment);
+})
+);
+
 module.exports = router;
