@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const ObjectId = mongoose.Types.ObjectId;
-const ratingSchema = mongoose.Schema(
+const reviewSchema = mongoose.Schema(
     {
-        course:{ type: ObjectId, ref: 'Course'},
         user:{ type: ObjectId, ref: 'User'},
+        course:{ type: ObjectId, ref: 'Course'},
         review: {
             type: String,
             trim: true,
@@ -16,36 +16,36 @@ const ratingSchema = mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
     },
 );
-ratingSchema.index({ course: 1, user: 1 }, { unique: true })
+reviewSchema.index({ course: 1, user: 1 }, { unique: true })
 
-const Rating = mongoose.model('Rating', ratingSchema);
+const Review = mongoose.model('Review', reviewSchema);
 
 async function add(courseId,studentId) {
-    const newRating = new Rating({
+    const newReview = new Review({
         course: courseId,
         student:studentId,
     });
-    await newRating.save();
-    return newRating;
+    await newReview.save();
+    return newReview;
 }
 
 async function exists(courseId,studentId) {
-    const rating = await Rating.findOne({student:studentId,course:courseId});
-    return !!rating;
+    const review = await Review.findOne({student:studentId,course:courseId});
+    return !!review;
 }
 
 async function getByCourseId(courseId) {
-    const ratings = await Rating.find({course:courseId});
-    return ratings;
+    const reviews = await Review.find({course:courseId});
+    return reviews;
 }
 
 async function getByStudentId(studentId) {
-    const ratings = await Rating.find({student:studentId});
-    return ratings;
+    const reviews = await Review.find({student:studentId});
+    return reviews;
 }
 
 module.exports = {
-    Rating,
+    Review,
     add,
     exists,
     getByCourseId,

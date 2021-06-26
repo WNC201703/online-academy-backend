@@ -122,7 +122,7 @@ async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
         .skip((pageNumber - 1) * pageSize)
         .sort(sort)
         .populate('category','name')
-        .populate('teacher');
+        .populate('teacher','fullname');
     const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
     return {
         "page_size": pageSize ? pageSize : totalCount,
