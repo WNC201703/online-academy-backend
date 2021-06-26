@@ -111,11 +111,12 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 })
 );
 
-
-router.post('/email/verify/send'), asyncHandler(async (req, res, next) => {
+router.post('/email/verify/send', asyncHandler(async (req, res, next) => {
   const { email } = req.body;
+  console.log(email);
   await userService.sendVerificationEmail(email);
-});
+  return res.status(httpStatus.OK).json();
+}));
 
 /**
  * @swagger
