@@ -80,6 +80,14 @@ router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
 })
 );
 
+//get user by id
+router.get('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
+  const users = await userService.getUserById(req.params.userId);
+  return res.status(httpStatus.OK).json(users);
+})
+);
+
+
 /**
  * @swagger
  * /api/users/login:
