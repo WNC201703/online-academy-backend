@@ -27,6 +27,13 @@ router.get('/', asyncHandler(async (req, res, next) => {
 })
 );
 
+//get top enrollment categories of the week
+router.get('/top_enrollment', asyncHandler(async (req, res, next) => {
+    const categories = await categoryService.getTopEnrrollmentCategoriesOfWeek();
+    return res.status(httpStatus.OK).json(categories);
+})
+);
+
 router.get('/:categoryId', asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
     const category = await categoryService.getCategoryById(categoryId);

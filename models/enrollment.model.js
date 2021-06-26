@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 const ObjectId = mongoose.Types.ObjectId;
 const enrollmentSchema = mongoose.Schema(
     {
-        course:{ type: ObjectId, ref: 'Enrollment'},
+        course:{ type: ObjectId, ref: 'Course'},
         student:{ type: ObjectId, ref: 'User'},
         createdAt: { type: Date, default: Date.now },
     },
@@ -22,7 +22,7 @@ async function add(courseId,studentId) {
 }
 
 async function exists(courseId,studentId) {
-    const enrollment = await Enrollment.find({student:studentId,courseId:courseId});
+    const enrollment = await Enrollment.findOne({student:studentId,course:courseId});
     return !!enrollment;
 }
 
