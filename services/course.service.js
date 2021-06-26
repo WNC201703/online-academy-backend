@@ -4,6 +4,7 @@ const { Category } = categoryModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const enrollmentModel = require("../models/enrollment.model");
+const reviewModel = require("../models/review.model");
 async function createCourse(body, teacherId) {
     const course = await courseModel.addNewCourse(teacherId, body);
 
@@ -76,6 +77,15 @@ async function enrollStudent(courseId, studentId) {
     return erollment;
 }
 
+async function addReview(courseId,userId,review,rating){
+    const enrollment = await enrollmentModel.get(courseId, userId);
+    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid");
+    const exists = await reviewModel.exists(enrollment._id);
+    if (exists)  throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
+    const result = await reviewModel.add(enrollment._id,courseId, userId,review,rating);
+    return result;
+}
+
 module.exports = {
     createCourse,
     getAll,
@@ -88,6 +98,7 @@ module.exports = {
     getPopularCourses,
     getLatestCourses,
     getTopViewedCourses,
+    addReview
 
 }
 

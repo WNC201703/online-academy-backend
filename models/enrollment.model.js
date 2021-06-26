@@ -26,6 +26,12 @@ async function exists(courseId,studentId) {
     return !!enrollment;
 }
 
+async function get(courseId,studentId) {
+    const enrollment =  await Enrollment.findOne({student:studentId,course:courseId});
+    return enrollment;
+}
+
+
 async function getByCourseId(courseId) {
     const enrollments = await Enrollment.find({course:courseId});
     return enrollments;
@@ -41,5 +47,5 @@ module.exports = {
     add,
     exists,
     getByCourseId,
-    getByStudentId,
+    getByStudentId,get
 };

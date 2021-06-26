@@ -18,8 +18,8 @@ router.post('/', auth('teacher'), asyncHandler(async (req, res, next) => {
 
 //get courses
 router.get('/', asyncHandler(async (req, res, next) => {
-    const { page_number, page_size, sort_by, key_word,category } = req.query;
-    const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word,category);
+    const { page_number, page_size, sort_by, key_word, category } = req.query;
+    const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word, category);
     return res.status(httpStatus.OK).json(results);
 })
 );
@@ -68,10 +68,18 @@ router.delete('/:courseId', auth('teacher'), asyncHandler(async (req, res, next)
 }));
 
 router.post('/:courseId/enrollments', auth(), asyncHandler(async (req, res, next) => {
-    const { courseId, userId } = req.body;
-    if (req.params.courseId != courseId) return res.status(httpStatus.BAD_REQUEST).json();
-    const enrollment = await courseService.enrollStudent(courseId, userId);
+    const userId = tokenService.getPayloadFromRequest(req).userId;
+    const enrollment = await courseService.enrollStudent(req.params.courseId, userId);
     return res.status(httpStatus.CREATED).json(enrollment);
+})
+);
+
+router.post('/:courseId/reviews', auth(), asyncHandler(async (req, res, next) => {
+    const { review, rating } = req.body;
+    const courseId = req.params.courseId;
+    const userId = tokenService.getPayloadFromRequest(req).userId;
+    const result = await courseService.addReview(courseId, userId, review, rating);
+    return res.status(httpStatus.CREATED).json(result);
 })
 );
 
