@@ -112,7 +112,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 );
 
 
-router.post('email/verify/send'), asyncHandler(async (req, res, next) => {
+router.post('/email/verify/send'), asyncHandler(async (req, res, next) => {
   const { email } = req.body;
   await userService.sendVerificationEmail(email);
 });
