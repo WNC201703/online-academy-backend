@@ -5,7 +5,7 @@ const categorySchema = mongoose.Schema(
     {
         parent: 
             { type: ObjectId, ref: 'Category'},
-        title: {
+        name: {
             type: String,
             trim: true,
             required: true,
@@ -30,10 +30,10 @@ async function updateCategory(categoryId, newData) {
     return updatedCategory;
 }
 
-async function addNewCategory(parent, title) {
+async function addNewCategory(parent, name) {
     const newCategory = new Category({
         parent: parent,
-        title: title
+        name: name
     });
     await newCategory.save();
     return newCategory;

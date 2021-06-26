@@ -1,8 +1,10 @@
-const { Category, categoryModel } = require("../models/category.model");
+const categoryModel= require("../models/category.model");
+const { Category }= categoryModel;
 const { Course } = require('../models/course.model');
 const { Enrollment } = require('../models/enrollment.model');
-async function createCategory(parent, title) {
-    const category = await categoryModel.addNewCategory(parent, title)
+async function createCategory(parent, name) {
+    console.log(parent,name);
+    const category = await categoryModel.addNewCategory(parent, name)
     return category;
 }
 
@@ -61,7 +63,7 @@ async function getTopEnrrollmentCategoriesOfWeek() {
         const c=categories[i];
         let obj={
             _id:c._id,
-            title:c.title,
+            name:c.name,
             enrollment:counts[c._id]
         };
         results.push(obj)

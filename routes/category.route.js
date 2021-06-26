@@ -9,8 +9,8 @@ const auth = require('../middlewares/auth.mdw');
 //create a category
 router.post('/', auth('admin'), asyncHandler(async (req, res, next) => {
     console.log('post');
-    const { parent, title } = req.body;
-    const category = await categoryService.createCategory(parent, title);
+    const { parent, name } = req.body;
+    const category = await categoryService.createCategory(parent, name);
     return res.status(httpStatus.CREATED).json(category);
 })
 );
