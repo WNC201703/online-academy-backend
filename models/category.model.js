@@ -50,6 +50,7 @@ async function getCategoriesByparent(parent) {
 }
 
 async function getChildren(categoryId){
+    if (!categoryId) return null;
     const parent = await Category.aggregate([
         {
             $sort: { order: 1 }
