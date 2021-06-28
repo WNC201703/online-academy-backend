@@ -1,5 +1,4 @@
 const express = require('express');
-const dbConfig = require('./config/db.config.json');
 const morgan = require('morgan');
 const cors = require('cors')
 const mongoose = require('mongoose');
@@ -37,7 +36,7 @@ app.use(function (err, req, res, next) {
   });
 })
 
-const uri = `mongodb+srv://${dbConfig.database.username}:${dbConfig.database.password}@cluster0.fezar.mongodb.net/${dbConfig.database.database_name}?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.fezar.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 mongoose
     .connect(
         uri,
