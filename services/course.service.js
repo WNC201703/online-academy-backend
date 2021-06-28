@@ -2,9 +2,7 @@ const courseModel = require("../models/course.model");
 const categoryModel = require("../models/category.model");
 const reviewModel = require("../models/review.model");
 const enrollmentModel = require("../models/enrollment.model");
-const mongoose = require('mongoose');
-const { Category } = categoryModel;
-const { Course } = courseModel;
+const lessonModel = require("../models/lesson.model");
 const { Review } = reviewModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
@@ -170,6 +168,13 @@ async function uploadCourseImage(file,courseId,teacherId){
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
     }
 }
+
+async function addLesson(courseId, teacherId, name, description) {
+    const permission = await courseModel.checkPermission(courseId, teacherId);
+    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    const lesson= await lessonModel.addLesson(courseId,name,description);
+    return lesson;
+}
 module.exports = {
     createCourse,
     getAll,
@@ -182,6 +187,7 @@ module.exports = {
     getNewestCourses,
     getTopViewedCourses,
     addReview,
-    uploadCourseImage
+    uploadCourseImage,
+    addLesson
 }
 

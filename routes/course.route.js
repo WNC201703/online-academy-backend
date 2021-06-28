@@ -88,9 +88,18 @@ router.post('/:courseId/image', auth('teacher'), upload.single("image"), asyncHa
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const imageUrl = await courseService.uploadCourseImage(req.file, req.params.courseId, teacherId);
     return res.status(httpStatus.CREATED).json({
-        imageUrl:imageUrl
+        imageUrl: imageUrl
     });
 })
 );
 
+//add course lessons 
+router.post('/:courseId/lessons', auth('teacher'), asyncHandler(async (req, res, next) => {
+    const teacherId = tokenService.getPayloadFromRequest(req).userId;
+    const {  name, description } = req.body;
+    const { courseId } = req.params;
+    const lesson = await courseService.addLesson(courseId, teacherId, name, description);
+    return res.status(httpStatus.CREATED).json(lesson);
+})
+);
 module.exports = router;
