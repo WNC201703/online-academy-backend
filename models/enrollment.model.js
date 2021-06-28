@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 const ObjectId = mongoose.Types.ObjectId;
 const enrollmentSchema = mongoose.Schema(
     {
-        course:{ type: ObjectId, ref: 'Course'},
-        student:{ type: ObjectId, ref: 'User'},
+        course:{ type: ObjectId, ref: 'Course',required:true},
+        student:{ type: ObjectId, ref: 'User',required:true},
         createdAt: { type: Date, default: Date.now },
     },
 );
