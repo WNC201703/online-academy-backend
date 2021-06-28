@@ -1,10 +1,13 @@
 const courseModel = require("../models/course.model");
 const categoryModel = require("../models/category.model");
+const reviewModel = require("../models/review.model");
+const mongoose = require('mongoose');
 const { Category } = categoryModel;
+const { Course } = courseModel;
+const { Review } = reviewModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const enrollmentModel = require("../models/enrollment.model");
-const reviewModel = require("../models/review.model");
 async function createCourse(body, teacherId) {
     const course = await courseModel.addNewCourse(teacherId, body);
 
@@ -28,8 +31,8 @@ async function getPopularCourses() {
     return courses;
 }
 
-async function getLatestCourses() {
-    const courses = await courseModel.getLatestCourses();
+async function getNewestCourses() {
+    const courses = await courseModel.getNewestCourses();
     return courses;
 }
 
@@ -38,24 +41,86 @@ async function getTopViewedCourses() {
     return courses;
 }
 
-async function getCoursesByCategory(categoryId) {
-    const categories = await categoryModel.getChildren(categoryId);
-    const courses = await courseModel.getCoursesByCategory(categories);
-    return courses;
-}
+// async function getCoursesByCategory(categoryId) {
+//     const categories = await categoryModel.getChildren(categoryId);
+//     const courses = await courseModel.getCoursesByCategory(categories);
+//     return courses;
+// }
 
-async function getCourses(pageNumber, pageSize, sortBy, keyWord,categoryId) {
-    let sort={};
+async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
+    let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
-    if (sortBy){
+    if (sortBy) {
         const arr = sortBy.split(',');
         arr.forEach(item => {
             const spl = item.split('.');
-            sort[spl[0]] = spl[1] === 'desc' ? -1:1;
+            sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
-    const result = await courseModel.getCourses(pageNumber,pageSize,sort,keyWord,categories);
-    return result;
+    if (!pageNumber) pageNumber = 1;
+    if (!pageSize) pageSize = 10;
+    let regex = new RegExp(keyword, 'i');
+    let obj = {};
+    if (keyword) obj['name'] = regex;
+    if (categories) obj['category'] = { "$in": categories };
+    let courses, totalCount = 0;
+    totalCount = await Course.countDocuments(
+        obj
+    );
+    courses = await Course.find(
+        obj
+    )
+        .limit(pageSize)
+        .skip((pageNumber - 1) * pageSize)
+        .sort(sort)
+        .populate('category', 'name')
+        .populate('teacher', 'fullname');
+
+    const coursesReview = await Review.aggregate([
+        {
+            $match: {
+                course: {
+                    $in: courses.map(course => course._id)
+                }
+            }
+        },
+        {
+            $group: {
+                _id: '$course',
+                avgRating: {
+                    $avg: '$rating',
+                },
+                numberOfReviews: {
+                    $sum: 1
+                }
+            }
+        }
+    ]);
+
+    let coursesReviewObj = {};
+    coursesReview.forEach(element => {
+        coursesReviewObj[element._id] = {
+            avgRating: element.avgRating,
+            numberOfReviews: element.numberOfReviews
+        };
+    });
+
+    let results = [];
+    courses.forEach(element => {
+        results.push({
+            ...(element._doc),
+            averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
+            numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
+        });
+    });
+    const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
+    return {
+        "pageSize": pageSize ? pageSize : totalCount,
+        "pageNumber": pageNumber ? pageNumber : 1,
+        "totalPages": pageSize ? totalPages : 1,
+        "totalResults": totalCount,
+        "results": results
+    };
 }
 
 async function updateCourse(courseId, teacherId, body) {
@@ -77,12 +142,12 @@ async function enrollStudent(courseId, studentId) {
     return erollment;
 }
 
-async function addReview(courseId,userId,review,rating){
+async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
-    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid");
+    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid student");
     const exists = await reviewModel.exists(enrollment._id);
-    if (exists)  throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
-    const result = await reviewModel.add(enrollment._id,courseId, userId,review,rating);
+    if (exists) throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
+    const result = await reviewModel.add(enrollment._id, courseId, userId, review, rating);
     return result;
 }
 
@@ -93,10 +158,10 @@ module.exports = {
     deleteCourse,
     getCourses,
     updateCourse,
-    getCoursesByCategory,
+    // getCoursesByCategory,
     enrollStudent,
     getPopularCourses,
-    getLatestCourses,
+    getNewestCourses,
     getTopViewedCourses,
     addReview
 
