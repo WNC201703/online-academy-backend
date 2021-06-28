@@ -68,30 +68,13 @@ async function addNewCourse(teacherId, body) {
 
 async function getCourseById(courseId) {
     const course = await Course.findById(courseId);
-
     try {
         course.view++;
         course.save();
     } catch (err) {
         console.log(err);
     }
-
-    const group=await Course.aggregate([
-        {
-            $match:{
-                _id:ObjectId(courseId)
-            }
-        },
-       
-        {
-            $lookup:{ from: 'reviews', localField: '_id', foreignField: 'course', as: 'reviews' }
-        },
-    ]);
-    return {
-        ...data,
-        averageRating:averageRating,
-        numberOfReviews:numberOfReviews
-    };
+    return course;
 }
 
 async function getAll() {
@@ -118,39 +101,28 @@ async function getTopViewedCourses() {
     return courses;
 }
 
+async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
+    if (!pageNumber) pageNumber = 1;
+    if (!pageSize) pageSize = 10;
+    let regex = new RegExp(keyword, 'i');
+    let obj = {};
+    if (keyword) obj['name'] = regex;
+    if (categories) obj['category'] = { "$in": categories };
+    let courses, totalCount = 0;
+    totalCount = await Course.countDocuments(
+        obj
+    );
+    courses = await Course.find(
+        obj
+    )
+        .limit(pageSize)
+        .skip((pageNumber - 1) * pageSize)
+        .sort(sort)
+        .populate('category','name')
+        .populate('teacher','fullname');
 
-// async function getCoursesByCategory(categories) {
-//     const courses = await Course.find({ category: { "$in": categories } });
-//     return courses;
-// }
-
-// async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
-    // let regex = new RegExp(keyword, 'i');
-    // let obj = {};
-    // if (keyword) obj['name'] = regex;
-    // if (categories) obj['category'] = { "$in": categories };
-    // let courses, totalCount = 0;
-    // totalCount = await Course.countDocuments(
-    //     obj
-    // );
-    // courses = await Course.find(
-    //     obj
-    // )
-    //     .limit(pageSize)
-    //     .skip((pageNumber - 1) * pageSize)
-    //     .sort(sort)
-    //     .populate('category','name')
-    //     .populate('teacher','fullname');
-    
-    // const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
-    // return {
-    //     "page_size": pageSize ? pageSize : totalCount,
-    //     "page_number": pageNumber ? pageNumber : 1,
-    //     "total_pages": pageSize ? totalPages : 1,
-    //     "total_results": totalCount,
-    //     "results": courses
-    // };
-// }
+    return {courses,totalCount};
+}
 
 async function updateCourse(courseId, newData) {
     newData.updatedAt=Date.now();
@@ -174,8 +146,7 @@ module.exports = {
     getAll,
     addNewCourse, deleteCourse, updateCourse,
     checkPermission,
-    // getCoursesByCategory,
-    // getCourses,
+    getCourses,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,

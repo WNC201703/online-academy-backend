@@ -32,7 +32,7 @@ async function get(courseId,studentId) {
 }
 
 
-async function getByCourseId(courseId) {
+async function getByCoursesId(courseId) {
     const enrollments = await Enrollment.find({course:courseId});
     return enrollments;
 }
@@ -41,11 +41,22 @@ async function getByStudentId(studentId) {
     const enrollments = await Enrollment.find({student:studentId});
     return enrollments;
 }
+async function countByCourseId(courseId){
+    const count = await Enrollment.countDocuments({course:courseId})
+    return count;
+}
+
+// async function countByStudent(courseId){
+//     const count = await Enrollment.countDocuments({course:courseId})
+//     return count;
+// }
 
 module.exports = {
     Enrollment,
     add,
     exists,
-    getByCourseId,
-    getByStudentId,get
+    getByCoursesId,
+    getByStudentId,
+    get,
+    countByCourseId
 };

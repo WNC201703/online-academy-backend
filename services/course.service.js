@@ -17,8 +17,34 @@ async function createCourse(body, teacherId) {
 }
 
 async function getCourseById(courseId) {
-    const course = await courseModel.getCourseById(courseId)
-    return course;
+    const course = await courseModel.getCourseById(courseId);
+    if (!course) throw new ApiError(httpStatus.NOT_FOUND,'Not found course!');
+    const courseReview = await Review.aggregate([
+        {
+            $match: {
+                course: course._id
+            }
+        },
+        {
+            $group: {
+                _id: '$course',
+                avgRating: {
+                    $avg: '$rating',
+                },
+                numberOfReviews: {
+                    $sum: 1
+                }
+            }
+        }
+    ]);
+
+    const count=await enrollmentModel.countByCourseId(courseId);
+    return {
+        ...(course._doc),
+        averageRating:courseReview[0].avgRating,
+        numberOfReviews:courseReview[0].numberOfReviews,
+        enrollments:count
+    };
 }
 
 
@@ -43,12 +69,6 @@ async function getTopViewedCourses() {
     return courses;
 }
 
-// async function getCoursesByCategory(categoryId) {
-//     const categories = await categoryModel.getChildren(categoryId);
-//     const courses = await courseModel.getCoursesByCategory(categories);
-//     return courses;
-// }
-
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
@@ -59,25 +79,8 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
-    if (!pageNumber) pageNumber = 1;
-    if (!pageSize) pageSize = 10;
-    let regex = new RegExp(keyword, 'i');
-    let obj = {};
-    if (keyword) obj['name'] = regex;
-    if (categories) obj['category'] = { "$in": categories };
-    let courses, totalCount = 0;
-    totalCount = await Course.countDocuments(
-        obj
-    );
-    courses = await Course.find(
-        obj
-    )
-        .limit(pageSize)
-        .skip((pageNumber - 1) * pageSize)
-        .sort(sort)
-        .populate('category', 'name')
-        .populate('teacher', 'fullname');
-
+    const {courses,totalCount}=await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword,categories);
+    
     const coursesReview = await Review.aggregate([
         {
             $match: {
