@@ -3,7 +3,7 @@ const userModel = require("../models/user.model");
 const mailService = require('./mail.service');
 const ApiError = require('../utils/ApiError');
 const jwt = require('jsonwebtoken');
-
+const { ROLE } = require('../utils/constants');
 const httpStatus = require('http-status')
 
 async function signUp(body) {
@@ -19,7 +19,7 @@ async function createUser(email, fullname, password) {
   const user = new User({
     fullname: fullname,
     email: email,
-    role: 'student',
+    role: ROLE.STUDENT,
     password: password,
   });
   await user.save();
