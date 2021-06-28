@@ -126,9 +126,10 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 }
 
 async function updateCourse(courseId, teacherId, body) {
+    const {imageUrl,view,...newData}=body;
     const permission = await courseModel.checkPermission(courseId, teacherId);
     if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
-    const course = await courseModel.updateCourse(courseId, body);
+    const course = await courseModel.updateCourse(courseId, newData);
     return course;
 }
 

@@ -12,18 +12,20 @@ const courseSchema = mongoose.Schema(
         },
         imageUrl: {
             type: String,
+            trim: true,
+            default:""
         },
         category:
             { type: ObjectId, ref: 'Category', required: true },
         shortDescription: {
             type: String,
             trim: true,
-            required: true,
+            default:""
         },
         detailDescription: {
             type: String,
             trim: true,
-            required: true,
+            default:""
         },
         price: {
             type: Number,
@@ -151,6 +153,7 @@ async function getTopViewedCourses() {
 // }
 
 async function updateCourse(courseId, newData) {
+    newData.updatedAt=Date.now();
     const course = await Course.findByIdAndUpdate(courseId, newData);
     const updatedCourse = await Course.findById(courseId, { __v: 0 });
     return updatedCourse;
