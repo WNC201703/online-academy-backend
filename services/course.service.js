@@ -1,13 +1,15 @@
 const courseModel = require("../models/course.model");
 const categoryModel = require("../models/category.model");
 const reviewModel = require("../models/review.model");
+const enrollmentModel = require("../models/enrollment.model");
 const mongoose = require('mongoose');
 const { Category } = categoryModel;
 const { Course } = courseModel;
 const { Review } = reviewModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
-const enrollmentModel = require("../models/enrollment.model");
+const cloudinary = require('../utils/cloudinary');
+
 async function createCourse(body, teacherId) {
     const course = await courseModel.addNewCourse(teacherId, body);
 
@@ -151,6 +153,19 @@ async function addReview(courseId, userId, review, rating) {
     return result;
 }
 
+async function uploadCourseImage(file,courseId,teacherId){
+    const permission = await courseModel.checkPermission(courseId, teacherId);
+    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    try {
+        const uploadResponse = await cloudinary.uploader.upload(file.path,
+            { public_id: `courses/${courseId}/image` });
+        const course = await courseModel.updateCourse(courseId,{imageUrl:uploadResponse.secure_url});
+        return course.imageUrl;
+    } catch (err) {
+        console.error(err);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
+    }
+}
 module.exports = {
     createCourse,
     getAll,
@@ -158,12 +173,11 @@ module.exports = {
     deleteCourse,
     getCourses,
     updateCourse,
-    // getCoursesByCategory,
     enrollStudent,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
-    addReview
-
+    addReview,
+    uploadCourseImage
 }
 

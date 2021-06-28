@@ -5,6 +5,7 @@ const courseService = require('../services/course.service');
 const asyncHandler = require('../utils/asyncHandler')
 const auth = require('../middlewares/auth.mdw');
 const tokenService = require('../services/token.service')
+const upload = require("../utils/upload");
 
 //create a course
 router.post('/', auth('teacher'), asyncHandler(async (req, res, next) => {
@@ -79,6 +80,16 @@ router.post('/:courseId/reviews', auth(), asyncHandler(async (req, res, next) =>
     const userId = tokenService.getPayloadFromRequest(req).userId;
     const result = await courseService.addReview(courseId, userId, review, rating);
     return res.status(httpStatus.CREATED).json(result);
+})
+);
+
+//post course image
+router.post('/:courseId/image', auth('teacher'), upload.single("image"), asyncHandler(async (req, res, next) => {
+    const teacherId = tokenService.getPayloadFromRequest(req).userId;
+    const imageUrl = await courseService.uploadCourseImage(req.file, req.params.courseId, teacherId);
+    return res.status(httpStatus.CREATED).json({
+        imageUrl:imageUrl
+    });
 })
 );
 

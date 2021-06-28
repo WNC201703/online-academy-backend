@@ -12,7 +12,6 @@ const courseSchema = mongoose.Schema(
         },
         imageUrl: {
             type: String,
-            required: true,
         },
         category:
             { type: ObjectId, ref: 'Category', required: true },
