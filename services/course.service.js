@@ -16,7 +16,7 @@ async function createCourse(body, teacherId) {
 
 async function getCourseById(courseId) {
     const course = await courseModel.getCourseById(courseId);
-    if (!course) throw new ApiError(httpStatus.NOT_FOUND,'Not found course!');
+    if (!course) throw new ApiError(httpStatus.NOT_FOUND, 'Not found course!');
     const courseReview = await Review.aggregate([
         {
             $match: {
@@ -36,12 +36,12 @@ async function getCourseById(courseId) {
         }
     ]);
 
-    const count=await enrollmentModel.countByCourseId(courseId);
+    const count = await enrollmentModel.countByCourseId(courseId);
     return {
         ...(course._doc),
-        averageRating:courseReview[0].avgRating,
-        numberOfReviews:courseReview[0].numberOfReviews,
-        enrollments:count
+        averageRating: courseReview[0].avgRating,
+        numberOfReviews: courseReview[0].numberOfReviews,
+        enrollments: count
     };
 }
 
@@ -77,8 +77,8 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
-    const {courses,totalCount}=await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword,categories);
-    
+    const { courses, totalCount } = await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword, categories);
+
     const coursesReview = await Review.aggregate([
         {
             $match: {
@@ -127,7 +127,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 }
 
 async function updateCourse(courseId, teacherId, body) {
-    const {imageUrl,view,...newData}=body;
+    const { imageUrl, view, ...newData } = body;
     const permission = await courseModel.checkPermission(courseId, teacherId);
     if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
     const course = await courseModel.updateCourse(courseId, newData);
@@ -155,13 +155,13 @@ async function addReview(courseId, userId, review, rating) {
     return result;
 }
 
-async function uploadCourseImage(file,courseId,teacherId){
+async function uploadCourseImage(file, courseId, teacherId) {
     const permission = await courseModel.checkPermission(courseId, teacherId);
     if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
     try {
         const uploadResponse = await cloudinary.uploader.upload(file.path,
             { public_id: `courses/${courseId}/image` });
-        const course = await courseModel.updateCourse(courseId,{imageUrl:uploadResponse.secure_url});
+        const course = await courseModel.updateCourse(courseId, { imageUrl: uploadResponse.secure_url });
         return course.imageUrl;
     } catch (err) {
         console.error(err);
@@ -172,8 +172,40 @@ async function uploadCourseImage(file,courseId,teacherId){
 async function addLesson(courseId, teacherId, name, description) {
     const permission = await courseModel.checkPermission(courseId, teacherId);
     if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
-    const lesson= await lessonModel.addLesson(courseId,name,description);
+    const lesson = await lessonModel.addLesson(courseId, name, description);
     return lesson;
+}
+
+async function getAllLessons(courseId) {
+    const lessons = await lessonModel.getAllLessons(courseId);
+    return lessons;
+}
+
+async function getLessonByLessonNumber(courseId, lessonNumber) {
+    const lesson = await lessonModel.getLessonByLessonNumber(courseId, lessonNumber);
+    return lesson;
+}
+
+async function uploadLessonVideo(file,teacherId, courseId, lessonNumber ) {
+    const permission = await courseModel.checkPermission(courseId, teacherId);
+    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    try {
+        const uploadResponse = await cloudinary.uploader.upload(file.path,
+            {  resource_type: "video",public_id: `courses/${courseId}/lessons/${lessonNumber}` });
+        console.log(uploadResponse);
+        const course = await lessonModel.updateLesson(courseId,lessonNumber, { videoUrl: uploadResponse.secure_url });
+        return course.videoUrl;
+    } catch (err) {
+        console.error(err);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
+    }
+}
+async function updateLessonInfo(courseId, teacherId,lessonNumber, body) {
+    const { videoUrl, ...newData } = body;
+    const permission = await courseModel.checkPermission(courseId, teacherId);
+    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    const course = await lessonModel.updateLesson(courseId,lessonNumber, newData);
+    return course;
 }
 module.exports = {
     createCourse,
@@ -188,6 +220,11 @@ module.exports = {
     getTopViewedCourses,
     addReview,
     uploadCourseImage,
-    addLesson
+
+    addLesson,
+    getAllLessons,
+    getLessonByLessonNumber,
+    uploadLessonVideo,
+    updateLessonInfo,
 }
 

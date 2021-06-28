@@ -21,6 +21,7 @@ const lessonSchema = mongoose.Schema(
             default: ""
         },
         createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now },
     },
 );
 lessonSchema.index({ course: 1, lessonNumber: 1 }, { unique: true })
@@ -40,8 +41,26 @@ async function addLesson(courseId, name, description) {
     return newLesson;
 }
 
+async function getAllLessons(courseId){
+    const lessons = await Lesson.find({ course: courseId }).sort({ lessonNumber: 1 });
+    return lessons;
+}
 
+async function getLessonByLessonNumber(courseId,lessonNumber){
+    const lesson = await Lesson.findOne({ course: courseId ,lessonNumber:lessonNumber});
+    return lesson;
+}
+
+async function updateLesson(courseId,lessonNumber, newData) {
+    newData.updatedAt=Date.now();
+    const lesson = await Lesson.findOneAndUpdate({course:courseId,lessonNumber:lessonNumber}, newData);
+    const updatedLesson = await Lesson.findOne({ course: courseId ,lessonNumber:lessonNumber}, { __v: 0 });
+    return updatedLesson;
+}
 module.exports = {
     Lesson,
     addLesson,
+    getAllLessons,
+    getLessonByLessonNumber,
+    updateLesson,
 };

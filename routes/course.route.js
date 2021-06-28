@@ -54,7 +54,7 @@ router.get('/:courseId', asyncHandler(async (req, res, next) => {
 );
 
 
-router.put('/:courseId', auth('teacher'), auth(), asyncHandler(async (req, res, next) => {
+router.put('/:courseId', auth('teacher'), asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const course = await courseService.updateCourse(courseId, teacherId, req.body);
@@ -96,10 +96,53 @@ router.post('/:courseId/image', auth('teacher'), upload.single("image"), asyncHa
 //add course lessons 
 router.post('/:courseId/lessons', auth('teacher'), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
-    const {  name, description } = req.body;
+    const { name, description } = req.body;
     const { courseId } = req.params;
     const lesson = await courseService.addLesson(courseId, teacherId, name, description);
     return res.status(httpStatus.CREATED).json(lesson);
 })
 );
+
+//get course lessons 
+router.get('/:courseId/lessons', asyncHandler(async (req, res, next) => {
+    const { courseId } = req.params;
+    const lessons = await courseService.getAllLessons(courseId);
+    return res.status(httpStatus.CREATED).json(lessons);
+})
+);
+
+//get course lesson by lessonNumber 
+router.get('/:courseId/lessons/:lessonNumber', asyncHandler(async (req, res, next) => {
+    const { courseId,lessonNumber } = req.params;
+    const lesson = await courseService.getLessonByLessonNumber(courseId,lessonNumber);
+    if (!lesson) res.status(httpStatus.NOT_FOUND).json({
+        message:"Not found"
+    });
+    return res.status(httpStatus.CREATED).json(lesson);
+})
+);
+
+//update lesson 
+router.put('/:courseId/lessons/:lessonNumber',  auth('teacher'),asyncHandler(async (req, res, next) => {
+    const { courseId,lessonNumber } = req.params;
+    const teacherId = tokenService.getPayloadFromRequest(req).userId;
+    const lesson = await courseService.updateLessonInfo(courseId,teacherId,lessonNumber,req.body);
+    if (!lesson) res.status(httpStatus.NOT_FOUND).json({
+        message:"Not found"
+    });
+    return res.status(httpStatus.CREATED).json(lesson);
+})
+);
+
+//post course image
+router.post('/:courseId/lessons/:lessonNumber/video', auth('teacher'), upload.single("video"), asyncHandler(async (req, res, next) => {
+    const teacherId = tokenService.getPayloadFromRequest(req).userId;
+    const {courseId,lessonNumber}=req.params;
+    const videoUrl = await courseService.uploadLessonVideo(req.file, teacherId,courseId,lessonNumber);
+    return res.status(httpStatus.CREATED).json({
+        videoUrl: videoUrl
+    });
+})
+);
+
 module.exports = router;
