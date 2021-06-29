@@ -50,12 +50,11 @@ const courseSchema = mongoose.Schema(
 
 const Course = mongoose.model('Course', courseSchema);
 
-async function addNewCourse(teacherId, body) {
-    const { name, imageUrl, shortDescription, detailDescription, category, price, percentDiscount } = body;
+async function addNewCourse(teacherId, data) {
+    const { name, shortDescription, detailDescription, category, price, percentDiscount } = data;
     const newCourse = new Course({
         teacher: teacherId,
         name: name,
-        imageUrl: imageUrl,
         shortDescription: shortDescription,
         detailDescription: detailDescription,
         category: category,
