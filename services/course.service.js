@@ -18,7 +18,8 @@ async function createCourse(teacherId, data, image) {
             return uCourse;
         } catch (err) {
             console.error(err);
-            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
+            return course;
+            // throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
         }
     }
     return course;
@@ -179,10 +180,24 @@ async function uploadCourseImage(file, courseId, teacherId) {
     }
 }
 
-async function addLesson(courseId, teacherId, name, description) {
+async function addLesson(courseId, teacherId, name, description, video) {
     const permission = await courseModel.checkPermission(courseId, teacherId);
     if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
     const lesson = await lessonModel.addLesson(courseId, name, description);
+    if (video) {
+        try {
+            const uploadResponse = await cloudinary.uploader.upload(video.path,
+                { resource_type: "video", public_id: `courses/${courseId}/lessons/${lesson.lessonNumber}` });
+            console.log(uploadResponse);
+            const uLesson = await lessonModel.updateLesson(courseId, lesson.lessonNumber, { videoUrl: uploadResponse.secure_url });
+            return uLesson;
+        } catch (err) {
+            console.error(err);
+            return lesson;
+            // throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
+        }
+    }
+
     return lesson;
 }
 
