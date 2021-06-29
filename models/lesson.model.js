@@ -42,7 +42,7 @@ async function addLesson(courseId, name, description) {
 }
 
 async function getAllLessons(courseId){
-    const lessons = await Lesson.find({ course: courseId }).sort({ lessonNumber: 1 });
+    const lessons = await Lesson.find({ course: courseId }).select('-__v').sort({ lessonNumber: 1 });
     return lessons;
 }
 
