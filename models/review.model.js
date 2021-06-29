@@ -45,9 +45,15 @@ async function get() {
     return reviews;
 }
 
+async function deleteCourseReviews(courseId) {
+    const course=await Review.deleteMany({course:courseId});
+    console.log(course);
+    return course;
+}
 
 module.exports = {
     Review,
     add,
     exists,
+    deleteCourseReviews,
 };

@@ -57,10 +57,17 @@ async function updateLesson(courseId,lessonNumber, newData) {
     const updatedLesson = await Lesson.findOne({ course: courseId ,lessonNumber:lessonNumber}, { __v: 0 });
     return updatedLesson;
 }
+
+async function deleteCourseLessons(courseId) {
+    const course=await Lesson.deleteMany({course:courseId});
+    console.log(course);
+    return course;
+}
 module.exports = {
     Lesson,
     addLesson,
     getAllLessons,
     getLessonByLessonNumber,
     updateLesson,
+    deleteCourseLessons,
 };

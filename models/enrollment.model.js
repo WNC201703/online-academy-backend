@@ -45,6 +45,11 @@ async function countByCourseId(courseId){
     const count = await Enrollment.countDocuments({course:courseId})
     return count;
 }
+async function deleteCourseEnrollments(courseId) {
+    const course=await Enrollment.deleteMany({course:courseId});
+    console.log(course);
+    return course;
+}
 
 // async function countByStudent(courseId){
 //     const count = await Enrollment.countDocuments({course:courseId})
@@ -58,5 +63,6 @@ module.exports = {
     getByCoursesId,
     getByStudentId,
     get,
-    countByCourseId
+    countByCourseId,
+    deleteCourseEnrollments,
 };

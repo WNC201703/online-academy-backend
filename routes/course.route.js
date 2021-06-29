@@ -64,10 +64,10 @@ router.put('/:courseId', auth('teacher'), asyncHandler(async (req, res, next) =>
     return res.status(httpStatus.OK).json(course);
 }));
 
-router.delete('/:courseId', auth('teacher'), asyncHandler(async (req, res, next) => {
+router.delete('/:courseId', auth('admin'), asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
-    const course = await courseService.deleteCourse(courseId);
-    return res.status(httpStatus.OK).json(course);
+    await courseService.deleteCourse(courseId);
+    return res.status(httpStatus.NO_CONTENT).json();
 }));
 
 router.post('/:courseId/enrollments', auth(), asyncHandler(async (req, res, next) => {
@@ -97,12 +97,12 @@ router.put('/:courseId/image', auth('teacher'), upload.single("image"), asyncHan
 );
 
 //add course lessons 
-router.post('/:courseId/lessons', auth('teacher'),  upload.single("video"), asyncHandler(async (req, res, next) => {
+router.post('/:courseId/lessons', auth('teacher'), upload.single("video"), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const { name, description } = req.body;
     const { courseId } = req.params;
     const video = req.file;
-    const lesson = await lessonService.addLesson(courseId, teacherId, name, description,video);
+    const lesson = await lessonService.addLesson(courseId, teacherId, name, description, video);
     return res.status(httpStatus.CREATED).json(lesson);
 })
 );

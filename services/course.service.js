@@ -129,7 +129,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     });
     const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
     return {
-        "pageSize": pageSize ? pageSize : totalCount,
+        "pageSize": pageSize ? pageSize : 10,
         "pageNumber": pageNumber ? pageNumber : 1,
         "totalPages": pageSize ? totalPages : 1,
         "totalResults": totalCount,
@@ -146,8 +146,16 @@ async function updateCourse(courseId, teacherId, body) {
 }
 
 async function deleteCourse(courseId) {
-    const course = await courseModel.deleteCourse(courseId);
-    return course;
+    const exists=await courseModel.exists(courseId);
+    if (!exists) throw  new ApiError(httpStatus.BAD_REQUEST, "Course not found");
+    await lessonModel.deleteCourseLessons(courseId);
+    await reviewModel.deleteCourseReviews(courseId);
+    await enrollmentModel.deleteCourseEnrollments(courseId);
+    // await favouriteModel.deleteCourseFavourites(courseId);
+    await courseModel.deleteCourse(courseId);
+    const existsAfterDelete=await courseModel.exists(courseId);
+    if (existsAfterDelete)  throw  new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+    return existsAfterDelete;
 }
 
 async function enrollStudent(courseId, studentId) {

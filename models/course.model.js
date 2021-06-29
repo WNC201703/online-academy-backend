@@ -50,6 +50,11 @@ const courseSchema = mongoose.Schema(
 
 const Course = mongoose.model('Course', courseSchema);
 
+async function exists(courseId) {
+    const course = await Course.findById(courseId);
+    return !!course;
+}
+
 async function addNewCourse(teacherId, data) {
     const { name, shortDescription, detailDescription, category, price, percentDiscount } = data;
     const newCourse = new Course({
@@ -131,7 +136,8 @@ async function updateCourse(courseId, newData) {
 }
 
 async function deleteCourse(courseId) {
-    return newCourse;
+    const result=await Course.deleteOne({_id:courseId});
+    return result;
 }
 
 async function checkPermission(courseId, teacherId) {
@@ -149,4 +155,5 @@ module.exports = {
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
+    exists,
 };
