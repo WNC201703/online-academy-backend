@@ -39,9 +39,16 @@ async function addNewCategory(parent, name) {
     return newCategory;
 }
 
-async function deleteCategory(categoryId) {
-    // const category=cate
-    return newCategory;
+async function exists(categoryId){
+    const category = await Category.findById(categoryId);
+    return !!category;
+}
+
+async function deleteCategory(categories) {
+    const result = await Category.deleteMany({_id: {
+        $in:categories.map(category => category._id)
+    }});
+    return result;
 }
 
 async function getCategoriesByparent(parent) {
@@ -83,4 +90,5 @@ module.exports = {
     updateCategory,
     getCategoriesByparent,
     getChildren,
+    exists,
 };

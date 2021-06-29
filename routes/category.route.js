@@ -58,8 +58,8 @@ router.put('/:categoryId', auth('admin'), asyncHandler(async (req, res, next) =>
 
 router.delete('/:categoryId', auth('admin'), asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
-    const category = await categoryService.deleteCategory(categoryId);
-    return res.status(httpStatus.OK).json(category);
+    const result = await categoryService.deleteCategory(categoryId);
+    return res.status(httpStatus.NO_CONTENT).json();
 }));
 
 module.exports = router;

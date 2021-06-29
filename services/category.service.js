@@ -2,6 +2,9 @@ const categoryModel= require("../models/category.model");
 const { Category }= categoryModel;
 const { Course } = require('../models/course.model');
 const { Enrollment } = require('../models/enrollment.model');
+const ApiError = require('../utils/ApiError');
+const httpStatus = require('http-status');
+
 async function createCategory(parent, name) {
     console.log(parent,name);
     const category = await categoryModel.addNewCategory(parent, name)
@@ -80,8 +83,24 @@ async function updateCategory(categoryId, body) {
 }
 
 async function deleteCategory(categoryId) {
-    const category = await categoryModel.deleteCategory(categoryId);
-    return category;
+    const categories = await categoryModel.getChildren(categoryId);
+    const courses= await Course.aggregate([
+        {
+            $match : {
+                category : {
+                    $in: categories.map(category => category._id)
+                }
+            }
+        }
+    ]);
+    console.log(categories);
+    console.log(categories.length);
+    console.log(courses);
+    if (courses.length!==0) throw  new ApiError(httpStatus.BAD_REQUEST, "Category exists courses");
+    const result = await categoryModel.deleteCategory(categories);
+    const exists=await categoryModel.exists(categoryId);
+    if (exists)  throw  new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+    return exists;
 }
 
 module.exports = {
