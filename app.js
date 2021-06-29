@@ -19,6 +19,12 @@ app.get('/err', function (req, res) {
   throw new ApiError(httpStatus.NOT_FOUND,'Error!');
 })
 
+app.get('/api/ping', function (req, res, next){
+  return res.status(httpStatus.OK).json({
+    message:'Successful'
+  });
+});
+
 app.use(function (req, res, next) {
   res.status(httpStatus.NOT_FOUND).json({
     message: 'RESOURCE NOT FOOUND'
