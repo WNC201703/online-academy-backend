@@ -68,17 +68,20 @@ async function getAll() {
 
 async function getPopularCourses() {
     const courses = await courseModel.getPopularCourses();
-    return courses;
+    const results=await getCoursesResponseData(courses);
+    return results;
 }
 
 async function getNewestCourses() {
     const courses = await courseModel.getNewestCourses();
-    return courses;
+    const results=await getCoursesResponseData(courses);
+    return results;
 }
 
 async function getTopViewedCourses() {
     const courses = await courseModel.getTopViewedCourses();
-    return courses;
+    const results=await getCoursesResponseData(courses);
+    return results;
 }
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
@@ -95,46 +98,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     }
     const { courses, totalCount } = await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword, categories);
 
-    const coursesReview = await Review.aggregate([
-        {
-            $match: {
-                course: {
-                    $in: courses.map(course => course._id)
-                }
-            }
-        },
-        {
-            $group: {
-                _id: '$course',
-                avgRating: {
-                    $avg: '$rating',
-                },
-                numberOfReviews: {
-                    $sum: 1
-                }
-            }
-        }
-    ]);
-
-    let coursesReviewObj = {};
-    coursesReview.forEach(element => {
-        coursesReviewObj[element._id] = {
-            avgRating: element.avgRating,
-            numberOfReviews: element.numberOfReviews
-        };
-    });
-
-    let results = [];
-    courses.forEach(element => {
-        let data=element._doc;
-        data.teacher=element._doc.teacher.fullname;
-        data.category=element._doc.category.name;
-        results.push({
-            ...data,
-            averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
-            numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
-        });
-    });
+    const results=await getCoursesResponseData(courses);
     
     const totalPages = totalCount === 0 ? 1 : Math.ceil(totalCount / pageSize);
     return {
@@ -210,6 +174,51 @@ async function verifyTeacher(courseId,teacherId){
     const verified = await courseModel.verifyTeacher(courseId, teacherId);
     if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
+
+async function getCoursesResponseData(courses){
+    const coursesReview = await Review.aggregate([
+        {
+            $match: {
+                course: {
+                    $in: courses.map(course => course._id)
+                }
+            }
+        },
+        {
+            $group: {
+                _id: '$course',
+                avgRating: {
+                    $avg: '$rating',
+                },
+                numberOfReviews: {
+                    $sum: 1
+                }
+            }
+        }
+    ]);
+
+    let coursesReviewObj = {};
+    coursesReview.forEach(element => {
+        coursesReviewObj[element._id] = {
+            avgRating: element.avgRating,
+            numberOfReviews: element.numberOfReviews
+        };
+    });
+
+    let results = [];
+    courses.forEach(element => {
+        let data=element._doc;
+        data.teacher=element._doc.teacher.fullname;
+        data.category=element._doc.category.name;
+        results.push({
+            ...data,
+            averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
+            numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
+        });
+    });
+    return results;
+}
+
 module.exports = {
     createCourse,
     getAll,

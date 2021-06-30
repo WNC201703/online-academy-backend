@@ -91,21 +91,21 @@ async function getAll() {
 }
 
 async function getPopularCourses() {
-    const courses = await Course.find();
+    const courses = await Course.find().select('-__v').populate('teacher','fullname').populate('category','name');
     return courses;
 }
 
 async function getNewestCourses() {
     const courses = await Course.find().sort({
         createdAt:-1
-    }).limit(10);
+    }).limit(10).select('-__v').populate('teacher','fullname').populate('category','name');
     return courses;
 }
 
 async function getTopViewedCourses() {
     const courses = await Course.find().sort({
         view: -1
-    }).limit(10);
+    }).limit(10).select('-__v').populate('teacher','fullname').populate('category','name');
     return courses;
 }
 
