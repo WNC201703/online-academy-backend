@@ -110,8 +110,6 @@ async function getTopViewedCourses() {
 }
 
 async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
-    if (!pageNumber) pageNumber = 1;
-    if (!pageSize) pageSize = 10;
     let regex = new RegExp(keyword, 'i');
     let obj = {};
     if (keyword) obj['name'] = regex;

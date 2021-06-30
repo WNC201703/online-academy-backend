@@ -79,6 +79,8 @@ async function getTopViewedCourses() {
 }
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
+    if (!pageNumber) pageNumber = 1;
+    if (!pageSize) pageSize = 10;
     let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
     if (sortBy) {
@@ -127,11 +129,12 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
         });
     });
-    const totalPages = totalCount == 0 ? 1 : Math.ceil(totalCount / pageSize);
+    
+    const totalPages = totalCount === 0 ? 1 : Math.ceil(totalCount / pageSize);
     return {
         "pageSize": pageSize ? pageSize : 10,
         "pageNumber": pageNumber ? pageNumber : 1,
-        "totalPages": pageSize ? totalPages : 1,
+        "totalPages": totalPages,
         "totalResults": totalCount,
         "results": results
     };
