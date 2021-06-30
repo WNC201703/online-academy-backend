@@ -75,9 +75,9 @@ async function login(body) {
     const success = await user.validatePassword(password);
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
     const accessToken = generateAccessToken(user.email, user._id);
-
+    const resUser=await User.findById(user._id).select('_id fullname email');
     return {
-      user:user,
+      user:resUser,
       accessToken:accessToken
     };
 

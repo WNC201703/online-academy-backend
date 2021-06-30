@@ -71,7 +71,8 @@ async function addNewCourse(teacherId, data) {
 }
 
 async function getCourseById(courseId) {
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).select('-__v').populate('teacher','fullname -_id');
+    console.log(course);
     try {
         course.view++;
         course.save();
