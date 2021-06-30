@@ -71,7 +71,10 @@ async function addNewCourse(teacherId, data) {
 }
 
 async function getCourseById(courseId) {
-    const course = await Course.findById(courseId).select('-__v').populate('teacher','fullname -_id');
+    const course = await Course.findById(courseId)
+    .select('-__v')
+    .populate('teacher','fullname')
+    .populate('category','name');
     console.log(course);
     try {
         course.view++;
@@ -120,6 +123,7 @@ async function getCourses(pageNumber, pageSize, sort, keyword, categories) {
     courses = await Course.find(
         obj
     )
+        .select('-__v')
         .limit(pageSize)
         .skip((pageNumber - 1) * pageSize)
         .sort(sort)
