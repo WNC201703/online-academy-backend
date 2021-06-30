@@ -4,7 +4,8 @@ const router = express.Router();
 const userService = require('../services/user.service');
 const asyncHandler = require('../utils/asyncHandler')
 const auth = require('../middlewares/auth.mdw');
-
+const tokenService = require('../services/token.service')
+const courseService = require('../services/course.service');
 /**
  * @swagger
  * components:
@@ -163,5 +164,13 @@ router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
 //   const user=await userService.resetPassword(currentPassword,newPassword);
 //   return res.status(httpStatus.OK).json({user});
 // }));
+
+router.get('/:userId/enrollments', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  if (userId!==req.params.userId)  return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+  const enrollments = await courseService.getEnrollmentsByStudentId(userId);
+  return res.status(httpStatus.CREATED).json(enrollments);
+})
+);
 
 module.exports = router;

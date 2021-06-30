@@ -39,7 +39,8 @@ async function getByCourseId(courseId) {
 }
 
 async function getByStudentId(studentId) {
-    const enrollments = await Enrollment.find({ student: studentId });
+    const enrollments = await Enrollment.find({ student: studentId }).select('-__v')
+    .populate('course', 'name ');
     return enrollments;
 }
 async function countByCourseId(courseId) {

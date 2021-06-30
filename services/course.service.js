@@ -170,6 +170,11 @@ async function getEnrollmentsByCourseId(courseId, teacherId) {
     return erollments;
 }
 
+async function getEnrollmentsByStudentId(studentId) {
+    const erollments = await enrollmentModel.getByStudentId(studentId);
+    return erollments;
+}
+
 async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
     if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid student");
@@ -205,6 +210,7 @@ module.exports = {
     updateCourse,
     enrollStudent,
     getEnrollmentsByCourseId,
+    getEnrollmentsByStudentId,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
