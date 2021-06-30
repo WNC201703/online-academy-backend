@@ -6,8 +6,7 @@ const cloudinary = require('../utils/cloudinary');
 
 
 async function addLesson(courseId, teacherId, name, description, video) {
-    const permission = await courseModel.checkPermission(courseId, teacherId);
-    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    await verifyTeacher(courseId,teacherId);
     const lesson = await lessonModel.addLesson(courseId, name, description);
     if (video) {
         try {
@@ -37,8 +36,7 @@ async function getLessonByLessonNumber(courseId, lessonNumber) {
 }
 
 async function uploadLessonVideo(file, teacherId, courseId, lessonNumber) {
-    const permission = await courseModel.checkPermission(courseId, teacherId);
-    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    await verifyTeacher(courseId,teacherId);
     try {
         const uploadResponse = await cloudinary.uploader.upload(file.path,
             { resource_type: "video", public_id: `courses/${courseId}/lessons/${lessonNumber}` });
@@ -52,10 +50,14 @@ async function uploadLessonVideo(file, teacherId, courseId, lessonNumber) {
 }
 async function updateLessonInfo(courseId, teacherId, lessonNumber, body) {
     const { videoUrl, ...newData } = body;
-    const permission = await courseModel.checkPermission(courseId, teacherId);
-    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    await verifyTeacher(courseId,teacherId);
     const course = await lessonModel.updateLesson(courseId, lessonNumber, newData);
     return course;
+}
+
+async function verifyTeacher(courseId,teacherId){
+    const verified = await courseModel.verifyTeacher(courseId, teacherId);
+    if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
 module.exports ={
     addLesson,

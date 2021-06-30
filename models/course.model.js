@@ -145,7 +145,7 @@ async function deleteCourse(courseId) {
     return result;
 }
 
-async function checkPermission(courseId, teacherId) {
+async function verifyTeacher(courseId, teacherId) {
     const course = await Course.findOne({ _id: courseId, teacher: teacherId },);
     return !!course;
 }
@@ -155,7 +155,7 @@ module.exports = {
     getCourseById,
     getAll,
     addNewCourse, deleteCourse, updateCourse,
-    checkPermission,
+    verifyTeacher ,
     getCourses,
     getPopularCourses,
     getNewestCourses,

@@ -139,8 +139,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 
 async function updateCourse(courseId, teacherId, body) {
     const { imageUrl, view, ...newData } = body;
-    const permission = await courseModel.checkPermission(courseId, teacherId);
-    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    await verifyTeacher(courseId,teacherId);
     const course = await courseModel.updateCourse(courseId, newData);
     return course;
 }
@@ -175,8 +174,7 @@ async function addReview(courseId, userId, review, rating) {
 }
 
 async function uploadCourseImage(file, courseId, teacherId) {
-    const permission = await courseModel.checkPermission(courseId, teacherId);
-    if (!permission) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+    await verifyTeacher(courseId,teacherId);
     try {
         const uploadResponse = await cloudinary.uploader.upload(file.path,
             { public_id: `courses/${courseId}/image` });
@@ -188,6 +186,10 @@ async function uploadCourseImage(file, courseId, teacherId) {
     }
 }
 
+async function verifyTeacher(courseId,teacherId){
+    const verified = await courseModel.verifyTeacher(courseId, teacherId);
+    if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
+}
 module.exports = {
     createCourse,
     getAll,
@@ -196,6 +198,7 @@ module.exports = {
     getCourses,
     updateCourse,
     enrollStudent,
+    getEnrollmentsByCourseId,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
