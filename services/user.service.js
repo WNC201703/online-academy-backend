@@ -108,7 +108,15 @@ async function updateUserInfo(userId, body) {
 }
 
 async function resetPassword(userId,currentPassword,newPassword) {
-
+  if (!currentPassword || !newPassword) throw new ApiError(httpStatus.BAD_REQUEST, "Required currentPassword, newPassword");
+  const user=await User.findById(userId);
+  const valid = await user.validatePassword(currentPassword);
+  if (!valid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password incorrect");
+  else {
+    user.password=newPassword;
+    await user.save();
+  }
+  return user;
 }
 
 

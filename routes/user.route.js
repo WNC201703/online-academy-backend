@@ -21,25 +21,8 @@ router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
 })
 );
 
-//get personal info
-router.get('/me/info', auth(), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
-  console.log(userId);
-  const user = await userService.getUserById(userId);
-  return res.status(httpStatus.OK).json(user);
-})
-);
-
-//get user by id
-router.get('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
-  const user = await userService.getUserById(req.params.userId);
-  return res.status(httpStatus.OK).json(user);
-})
-);
-
-
 router.post('/login', asyncHandler(async (req, res, next) => {
-  const {user,accessToken,} = await userService.login(req.body);
+  const { user, accessToken, } = await userService.login(req.body);
   if (!!accessToken)
     return res.status(httpStatus.OK).json({
       authenticated: true,
@@ -48,6 +31,27 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     });
   else
     return res.status(httpStatus.UNAUTHORIZED).json({ authenticated: false, });
+})
+);
+
+//update user info 
+router.put('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
+  const user = await userService.updateUserInfo(req.params.userId, req.body);
+  return res.status(httpStatus.OK).json({ user });
+}));
+
+//get user by id
+router.get('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
+  const user = await userService.getUserById(req.params.userId);
+  return res.status(httpStatus.OK).json(user);
+})
+);
+
+//get personal info
+router.get('/me/info', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  const user = await userService.getUserById(userId);
+  return res.status(httpStatus.OK).json(user);
 })
 );
 
@@ -70,23 +74,18 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
       success: false
     });
   }
-
 }));
 
-router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
-  const user=await userService.updateUserInfo(req.params.userId,req.body);
-  return res.status(httpStatus.OK).json({user});
+router.put('/password/reset', auth(), asyncHandler(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  const user = await userService.resetPassword(userId, currentPassword, newPassword);
+  return res.status(httpStatus.OK).json({ user });
 }));
-
-// router.post('/password/reset', auth(), asyncHandler(async (req, res, next) => {
-//   const {currentPassword,newPassword}=req.body;
-//   const user=await userService.resetPassword(currentPassword,newPassword);
-//   return res.status(httpStatus.OK).json({user});
-// }));
 
 router.get('/:userId/enrollments', auth(), asyncHandler(async (req, res, next) => {
   const userId = tokenService.getPayloadFromRequest(req).userId;
-  if (userId!==req.params.userId)  return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
   const enrollments = await courseService.getEnrollmentsByStudentId(userId);
   return res.status(httpStatus.CREATED).json(enrollments);
 })
