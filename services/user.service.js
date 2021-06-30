@@ -108,7 +108,7 @@ async function updateUserInfo(userId, body) {
 }
 
 async function resetPassword(userId,currentPassword,newPassword) {
-
+    // const user=await 
 }
 
 
