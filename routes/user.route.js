@@ -21,12 +21,22 @@ router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
 })
 );
 
-//get user by id
-router.get('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
-  const users = await userService.getUserById(req.params.userId);
-  return res.status(httpStatus.OK).json(users);
+//get personal info
+router.get('/me/info', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  console.log(userId);
+  const user = await userService.getUserById(userId);
+  return res.status(httpStatus.OK).json(user);
 })
 );
+
+//get user by id
+router.get('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
+  const user = await userService.getUserById(req.params.userId);
+  return res.status(httpStatus.OK).json(user);
+})
+);
+
 
 router.post('/login', asyncHandler(async (req, res, next) => {
   const {user,accessToken,} = await userService.login(req.body);
