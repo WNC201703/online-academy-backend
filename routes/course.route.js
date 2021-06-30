@@ -70,6 +70,14 @@ router.delete('/:courseId', auth('admin'), asyncHandler(async (req, res, next) =
     return res.status(httpStatus.NO_CONTENT).json();
 }));
 
+router.get('/:courseId/enrollments', auth('teacher'), asyncHandler(async (req, res, next) => {
+    const teacherId = tokenService.getPayloadFromRequest(req).userId;
+    const {courseId}=req.params;
+    const enrollments = await courseService.getEnrollmentsByCourseId(courseId, teacherId);
+    return res.status(httpStatus.CREATED).json(enrollments);
+})
+);
+
 router.post('/:courseId/enrollments', auth(), asyncHandler(async (req, res, next) => {
     const userId = tokenService.getPayloadFromRequest(req).userId;
     const enrollment = await courseService.enrollStudent(req.params.courseId, userId);

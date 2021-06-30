@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 const ObjectId = mongoose.Types.ObjectId;
 const enrollmentSchema = mongoose.Schema(
     {
-        course:{ type: ObjectId, ref: 'Course',required:true},
-        student:{ type: ObjectId, ref: 'User',required:true},
+        course: { type: ObjectId, ref: 'Course', required: true },
+        student: { type: ObjectId, ref: 'User', required: true },
         createdAt: { type: Date, default: Date.now },
     },
 );
@@ -12,41 +12,42 @@ enrollmentSchema.index({ course: 1, student: 1 }, { unique: true })
 
 const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
 
-async function add(courseId,studentId) {
+async function add(courseId, studentId) {
     const newEnrollment = new Enrollment({
         course: courseId,
-        student:studentId,
+        student: studentId,
     });
     await newEnrollment.save();
     return newEnrollment;
 }
 
-async function exists(courseId,studentId) {
-    const enrollment = await Enrollment.findOne({student:studentId,course:courseId});
+async function exists(courseId, studentId) {
+    const enrollment = await Enrollment.findOne({ student: studentId, course: courseId });
     return !!enrollment;
 }
 
-async function get(courseId,studentId) {
-    const enrollment =  await Enrollment.findOne({student:studentId,course:courseId});
+async function get(courseId, studentId) {
+    const enrollment = await Enrollment.findOne({ student: studentId, course: courseId });
     return enrollment;
 }
 
 
-async function getByCoursesId(courseId) {
-    const enrollments = await Enrollment.find({course:courseId});
+async function getByCourseId(courseId) {
+    const enrollments = await Enrollment.find({ course: courseId }).select('-__v')
+        .populate('student', 'fullname email');
     return enrollments;
 }
 
 async function getByStudentId(studentId) {
-    const enrollments = await Enrollment.find({student:studentId});
+    const enrollments = await Enrollment.find({ student: studentId });
     return enrollments;
 }
-async function countByCourseId(courseId){
-    const count = await Enrollment.countDocuments({course:courseId})
+async function countByCourseId(courseId) {
+    const count = await Enrollment.countDocuments({ course: courseId })
     return count;
 }
 async function deleteCourseEnrollments(courseId) {
-    const course=await Enrollment.deleteMany({course:courseId});
+    const course = await Enrollment.deleteMany({ course: courseId });
     console.log(course);
     return course;
 }
@@ -60,7 +61,7 @@ module.exports = {
     Enrollment,
     add,
     exists,
-    getByCoursesId,
+    getByCourseId,
     getByStudentId,
     get,
     countByCourseId,

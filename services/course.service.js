@@ -164,6 +164,12 @@ async function enrollStudent(courseId, studentId) {
     return erollment;
 }
 
+async function getEnrollmentsByCourseId(courseId, teacherId) {
+    await verifyTeacher(courseId,teacherId);
+    const erollments = await enrollmentModel.getByCourseId(courseId);
+    return erollments;
+}
+
 async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
     if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid student");
