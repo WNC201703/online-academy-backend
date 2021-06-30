@@ -48,10 +48,13 @@ async function getCourseById(courseId) {
     ]);
 
     const count = await enrollmentModel.countByCourseId(courseId);
+    let data=course._doc;
+        data.teacher=course._doc.teacher.fullname;
+        data.category=course._doc.category.name;
     return {
-        ...(course._doc),
-        averageRating: courseReview[0].avgRating,
-        numberOfReviews: courseReview[0].numberOfReviews,
+        ...data,
+        averageRating: courseReview[0]?courseReview[0].avgRating:0,
+        numberOfReviews: courseReview[0]? courseReview[0].numberOfReviews:0,
         enrollments: count
     };
 }
@@ -123,8 +126,11 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 
     let results = [];
     courses.forEach(element => {
+        let data=element._doc;
+        data.teacher=element._doc.teacher.fullname;
+        data.category=element._doc.category.name;
         results.push({
-            ...(element._doc),
+            ...data,
             averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
             numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
         });
