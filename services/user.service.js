@@ -26,8 +26,8 @@ async function createUser(email, fullname, password) {
   return user;
 }
 
-async function getAllUsers() {
-  const users = await userModel.getAllUsers();
+async function getAllUsers(role) {
+  const users = await userModel.getAllUsers(role);
   return users;
 }
 

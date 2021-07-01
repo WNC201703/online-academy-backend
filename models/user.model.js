@@ -78,8 +78,10 @@ async function getUserById(userId){
   const user = await User.findById(userId, { __v: 0, password: 0 ,verification_token:0});
   return user; 
 }
-async function getAllUsers(){
-  const users= await User.find({active:true,}, { __v: 0, password: 0 ,verification_token:0});
+async function getAllUsers(role){
+  const queryObj={active:true,};
+  if (role) queryObj['role']=role;
+  const users= await User.find(queryObj, { __v: 0, password: 0 ,verification_token:0});
   return users;
 }
 async function updateUserInfo(userId,newData){
