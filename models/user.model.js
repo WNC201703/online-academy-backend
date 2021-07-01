@@ -44,6 +44,7 @@ const userSchema = mongoose.Schema(
     verification_token: {
       type: String,
     },
+    createdAt: { type: Date, default: Date.now },
   },
 );
 
