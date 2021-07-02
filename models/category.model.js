@@ -18,7 +18,7 @@ const Category = mongoose.model('Category', categorySchema);
 
 
 async function getCategoryById(categoryId) {
-    const category = await Category.findById(categoryId, { __v: 0, password: 0 });
+    const category = await Category.findById(categoryId).select('-__v').populate('parent','name');;
     return category;
 }
 async function getAll() {

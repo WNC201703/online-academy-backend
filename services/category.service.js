@@ -12,8 +12,12 @@ async function createCategory(parent, name) {
 }
 
 async function getCategoryById(categoryId) {
-    const category = await categoryModel.getCategoryById(categoryId)
-    return category;
+    const category = await categoryModel.getCategoryById(categoryId);
+    let data={...category._doc};
+        data.parent=category._doc.parent._id;
+        data['parentName']=category._doc.parent.name;
+        console.log(data);
+    return data;
 }
 
 
@@ -24,7 +28,18 @@ async function getCategoriesByparent(parent) {
 
 async function getCategories() {
     const categories = await categoryModel.getAll();
-    return categories;
+    const results=[];
+    categories.forEach(element => {
+        let data={...element._doc};
+        if (element._doc.parent){
+            data.parent=element._doc.parent._id;
+            data.parentName=element._doc.parent.name;
+        }
+        else {
+        }
+        results.push(data);
+    });
+    return results;
 }
 
 async function getTopEnrrollmentCategoriesOfWeek() {
