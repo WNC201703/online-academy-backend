@@ -17,7 +17,6 @@ router.post('/', asyncHandler(async (req, res, next) => {
 //get users
 router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
   const {role}=req.query;
-  console.log(role);
   const users = await userService.getAllUsers(role);
   return res.status(httpStatus.OK).json(users);
 })

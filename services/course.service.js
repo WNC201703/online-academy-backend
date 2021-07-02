@@ -86,7 +86,7 @@ async function getTopViewedCourses() {
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     if (!pageNumber) pageNumber = 1;
-    if (!pageSize) pageSize = 10;
+    if (pageSize!==0 && !pageSize) pageSize = 10;
     let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
     if (sortBy) {
@@ -100,9 +100,9 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 
     const results=await getCoursesResponseData(courses);
     
-    const totalPages = totalCount === 0 ? 1 : Math.ceil(totalCount / pageSize);
+    const totalPages = totalCount === 0 ? 1 : (pageSize===0) ? 1 :Math.ceil(totalCount / pageSize);
     return {
-        "pageSize": pageSize ? pageSize : 10,
+        "pageSize": pageSize===0 ? totalCount : pageSize,
         "pageNumber": pageNumber ? pageNumber : 1,
         "totalPages": totalPages,
         "totalResults": totalCount,
