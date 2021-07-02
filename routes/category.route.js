@@ -17,12 +17,12 @@ router.post('/', auth('admin'), asyncHandler(async (req, res, next) => {
 
 //get categories
 router.get('/', asyncHandler(async (req, res, next) => {
-    const parent = req.query.parent;
+    const {parent,level} = req.query;
     if (!!parent) {
         const categories = await categoryService.getCategoriesByparent(parent);
         return res.status(httpStatus.OK).json(categories);
     }
-    const categories = await categoryService.getCategories();
+    const categories = await categoryService.getCategories(level);
     return res.status(httpStatus.OK).json(categories);
 })
 );
