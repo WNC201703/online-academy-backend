@@ -22,7 +22,7 @@ async function getCategoryById(categoryId) {
     return category;
 }
 async function getAll() {
-    const categories = await Category.find();
+    const categories = await Category.find().select('-__v').populate('parent','name');
     return categories;
 }
 async function updateCategory(categoryId, newData) {
