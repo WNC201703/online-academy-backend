@@ -70,6 +70,11 @@ async function isEmailTaken(email) {
   return !!user;
 };
 
+async function exists(userId) {
+  const user = await User.findById(userId);
+  return !!user;
+}
+
 async function getUserByEmail(email) {
   const user = await User.findOne({ email: email });
   return user;
@@ -88,11 +93,19 @@ async function updateUserInfo(userId,newData){
   const user = await User.findByIdAndUpdate(userId,newData);
   return user;
 }
+
+async function deleteUser(userId){
+  const result=await User.deleteOne({_id:userId});
+  return result;
+}
+
 module.exports = {
   User,
   isEmailTaken,
+  exists,
   getUserByEmail,
   getAllUsers,
   getUserById,
-  updateUserInfo
+  updateUserInfo,
+  deleteUser,
 };

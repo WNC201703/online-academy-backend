@@ -1,6 +1,9 @@
 const { User } = require("../models/user.model");
 const userModel = require("../models/user.model");
+const courseModel = require("../models/course.model");
+const { Course } = courseModel;
 const mailService = require('./mail.service');
+const courseService = require('./course.service');
 const ApiError = require('../utils/ApiError');
 const jwt = require('jsonwebtoken');
 const { ROLE } = require('../utils/constants');
@@ -26,12 +29,12 @@ async function createUser(email, fullname, password) {
   return user;
 }
 
-async function createTeacher({email, fullname, password}) {
+async function createTeacher({ email, fullname, password }) {
   if (await userModel.isEmailTaken(email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email is taken");
   }
   const user = new User({
-    active:true,
+    active: true,
     fullname: fullname,
     email: email,
     role: ROLE.TEACHER,
@@ -41,6 +44,24 @@ async function createTeacher({email, fullname, password}) {
   return user;
 }
 
+async function deleteUser(userId) {
+  const user = await userModel.getUserById(userId);
+  if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Course not found user");
+  if (user.role === ROLE.STUDENT) {
+    await userModel.deleteUser(userId);
+  }
+  if (user.role === ROLE.TEACHER) {
+    const courses = await Course.find({ teacher: userId });
+
+    await Promise.all(courses.map(async (course) => {
+      const name = course.name;
+      await courseService.deleteCourse(course._id);
+      console.log('deleted course:', name);
+    }));
+
+    await userModel.deleteUser(userId);
+  }
+}
 
 async function getAllUsers(role) {
   const users = await userModel.getAllUsers(role);
@@ -91,10 +112,10 @@ async function login(body) {
     const success = await user.validatePassword(password);
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
     const accessToken = generateAccessToken(user.email, user._id);
-    const resUser=await User.findById(user._id).select('_id fullname email role');
+    const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
-      user:resUser,
-      accessToken:accessToken
+      user: resUser,
+      accessToken: accessToken
     };
 
   }
@@ -110,7 +131,7 @@ async function getUserById(userId) {
 
 async function updateUserInfo(userId, body) {
   let user = await userModel.getUserById(userId);
-  if (body.email && body.email!=user.email) {
+  if (body.email && body.email != user.email) {
     user.email = body.email;
     user.active = false;
   }
@@ -118,18 +139,18 @@ async function updateUserInfo(userId, body) {
 
   await user.save();
   user = await userModel.getUserById(userId);
-  if (user.active === false && user.email===body.email)
+  if (user.active === false && user.email === body.email)
     await sendVerificationEmail(user.email);
   return user;
 }
 
-async function resetPassword(userId,currentPassword,newPassword) {
+async function resetPassword(userId, currentPassword, newPassword) {
   if (!currentPassword || !newPassword) throw new ApiError(httpStatus.BAD_REQUEST, "Required currentPassword, newPassword");
-  const user=await User.findById(userId);
+  const user = await User.findById(userId);
   const valid = await user.validatePassword(currentPassword);
   if (!valid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password incorrect");
   else {
-    user.password=newPassword;
+    user.password = newPassword;
     await user.save();
   }
   return user;
@@ -154,6 +175,7 @@ module.exports = {
   updateUserInfo,
   resetPassword,
   createTeacher,
+  deleteUser,
   // join
 }
 

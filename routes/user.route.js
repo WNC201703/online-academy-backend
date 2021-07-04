@@ -99,4 +99,11 @@ router.get('/:userId/enrollments', auth(), asyncHandler(async (req, res, next) =
 })
 );
 
+router.delete('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
+  const {userId} = req.params;
+  await userService.deleteUser(userId);
+  return res.status(httpStatus.NO_CONTENT).json();
+})
+);
+
 module.exports = router;
