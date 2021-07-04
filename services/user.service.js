@@ -26,6 +26,22 @@ async function createUser(email, fullname, password) {
   return user;
 }
 
+async function createTeacher({email, fullname, password}) {
+  if (await userModel.isEmailTaken(email)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Email is taken");
+  }
+  const user = new User({
+    active:true,
+    fullname: fullname,
+    email: email,
+    role: ROLE.TEACHER,
+    password: password,
+  });
+  await user.save();
+  return user;
+}
+
+
 async function getAllUsers(role) {
   const users = await userModel.getAllUsers(role);
   return users;
@@ -137,6 +153,7 @@ module.exports = {
   getUserById,
   updateUserInfo,
   resetPassword,
+  createTeacher,
   // join
 }
 

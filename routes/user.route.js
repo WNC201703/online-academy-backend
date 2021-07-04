@@ -7,16 +7,23 @@ const auth = require('../middlewares/auth.mdw');
 const tokenService = require('../services/token.service')
 const courseService = require('../services/course.service');
 
-//create a user
+//create a student
 router.post('/', asyncHandler(async (req, res, next) => {
   await userService.signUp(req.body);
   return res.status(httpStatus.CREATED).json({ success: true });
 })
 );
 
+//create a teacher
+router.post('/teacher', auth('admin'), asyncHandler(async (req, res, next) => {
+  await userService.createTeacher(req.body);
+  return res.status(httpStatus.CREATED).json({ success: true });
+})
+);
+
 //get users
 router.get('/', auth('admin'), asyncHandler(async (req, res, next) => {
-  const {role}=req.query;
+  const { role } = req.query;
   const users = await userService.getAllUsers(role);
   return res.status(httpStatus.OK).json(users);
 })
