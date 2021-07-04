@@ -129,18 +129,19 @@ async function getUserById(userId) {
   return user;
 }
 
-async function updateUserInfo(userId, body) {
+async function updateUserInfoByAdmin(userId, body) {
   let user = await userModel.getUserById(userId);
-  if (body.email && body.email != user.email) {
-    user.email = body.email;
-    user.active = false;
-  }
+  // if (body.email && body.email != user.email) {
+  //   user.email = body.email;
+  //   user.active = false;
+  // }
   if (body.fullname) user.fullname = body.fullname;
-
+  const {fullname,email,password}=body;
+  if (fullname) user.fullname=fullname;
+  if (email) user.email=email;
+  if (password) user.password=password;
   await user.save();
   user = await userModel.getUserById(userId);
-  if (user.active === false && user.email === body.email)
-    await sendVerificationEmail(user.email);
   return user;
 }
 
@@ -172,7 +173,7 @@ module.exports = {
   login,
   getAllUsers,
   getUserById,
-  updateUserInfo,
+  updateUserInfoByAdmin,
   resetPassword,
   createTeacher,
   deleteUser,
