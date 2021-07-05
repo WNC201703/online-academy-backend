@@ -1,9 +1,13 @@
-const { User } = require("../models/user.model");
 const userModel = require("../models/user.model");
+const { User } = require("../models/user.model");
 const courseModel = require("../models/course.model");
 const { Course } = courseModel;
+const {Review} = require("../models/review.model");
+const {Enrollment} = require("../models/enrollment.model");
+
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
+
 const ApiError = require('../utils/ApiError');
 const jwt = require('jsonwebtoken');
 const { ROLE } = require('../utils/constants');
@@ -48,7 +52,12 @@ async function deleteUser(userId) {
   const user = await userModel.getUserById(userId);
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Course not found user");
   if (user.role === ROLE.STUDENT) {
+    await Review.deleteMany({user:userId});
+    console.log('deleted reviews:', user.fullname);
+    await Enrollment.deleteMany({student:userId});
+    console.log('deleted enrollments:', user.fullname);
     await userModel.deleteUser(userId);
+    console.log('deleted user');
   }
   if (user.role === ROLE.TEACHER) {
     const courses = await Course.find({ teacher: userId });
@@ -135,11 +144,10 @@ async function updateUserInfoByAdmin(userId, body) {
   //   user.email = body.email;
   //   user.active = false;
   // }
-  if (body.fullname) user.fullname = body.fullname;
-  const {fullname,email,password}=body;
-  if (fullname) user.fullname=fullname;
-  if (email) user.email=email;
-  if (password) user.password=password;
+  const { fullname, email, password } = body;
+  if (email && user.role === ROLE.TEACHER) user.email = email;
+  if (fullname) user.fullname = fullname;
+  if (password) user.password = password;
   await user.save();
   user = await userModel.getUserById(userId);
   return user;

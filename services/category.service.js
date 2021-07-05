@@ -108,9 +108,6 @@ async function deleteCategory(categoryId) {
             }
         }
     ]);
-    console.log(categories);
-    console.log(categories.length);
-    console.log(courses);
     if (courses.length !== 0) throw new ApiError(httpStatus.BAD_REQUEST, "Category exists courses");
     const result = await categoryModel.deleteCategory(categories);
     const exists = await categoryModel.exists(categoryId);
