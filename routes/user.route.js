@@ -44,7 +44,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 
 //update user info by admin
 router.put('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
-  const {userId}=req.params;
+  const { userId } = req.params;
   const user = await userService.updateUserInfoByAdmin(userId, req.body);
   return res.status(httpStatus.OK).json({ user });
 }));
@@ -101,8 +101,37 @@ router.get('/:userId/enrollments', auth(), asyncHandler(async (req, res, next) =
 );
 
 router.delete('/:userId', auth('admin'), asyncHandler(async (req, res, next) => {
-  const {userId} = req.params;
+  const { userId } = req.params;
   await userService.deleteUser(userId);
+  return res.status(httpStatus.NO_CONTENT).json();
+})
+);
+
+router.get('/:userId/favorites', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+
+  const results = await userService.getFavoriteCourses(userId);
+  return res.status(httpStatus.OK).json(results);
+})
+);
+
+router.put('/:userId/favorites/:courseId', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+
+  const courseId = req.params.courseId;
+  const result = await userService.favoriteCourse(userId, courseId);
+  return res.status(httpStatus.OK).json(result);
+})
+);
+
+router.delete('/:userId/favorites/:courseId', auth(), asyncHandler(async (req, res, next) => {
+  const userId = tokenService.getPayloadFromRequest(req).userId;
+  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+
+  const courseId = req.params.courseId;
+  const result = await userService.unFavoriteCourse(userId, courseId);
   return res.status(httpStatus.NO_CONTENT).json();
 })
 );

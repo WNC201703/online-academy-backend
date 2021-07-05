@@ -4,6 +4,7 @@ const courseModel = require("../models/course.model");
 const { Course } = courseModel;
 const {Review} = require("../models/review.model");
 const {Enrollment} = require("../models/enrollment.model");
+const favoriteModel = require("../models/favorite.model");
 
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
@@ -165,6 +166,29 @@ async function resetPassword(userId, currentPassword, newPassword) {
   return user;
 }
 
+async function getFavoriteCourses(userId){
+  const favorites=await favoriteModel.getByUserId(userId);
+  const results=[];
+  favorites.forEach(element => {
+    let data = { ...element._doc };
+  data.course = element._doc.course._id;
+  data['courseName'] = element._doc.course.name;
+  results.push(data);
+  });
+  
+  return results;
+}
+async function favoriteCourse(userId,courseId){
+  const favorite=await favoriteModel.get(userId,courseId); 
+  if (favorite) return favorite;
+  const result=await favoriteModel.add(userId,courseId);
+  return result;
+}
+async function unFavoriteCourse(userId,courseId){
+  const result=await favoriteModel.deleteUserFavorite(userId,courseId);
+  return result;
+}
+
 
 function generateAccessToken(email, id) {
   const payload = {
@@ -185,6 +209,9 @@ module.exports = {
   resetPassword,
   createTeacher,
   deleteUser,
+  getFavoriteCourses,
+  favoriteCourse,
+  unFavoriteCourse,
   // join
 }
 
