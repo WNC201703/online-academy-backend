@@ -1,15 +1,16 @@
 const express = require('express');
-const httpStatus = require("http-status");
 const router = express.Router();
+const httpStatus = require("http-status");
+const asyncHandler = require('../utils/asyncHandler')
 const courseService = require('../services/course.service');
 const lessonService = require('../services/lesson.service');
-const asyncHandler = require('../utils/asyncHandler')
-const auth = require('../middlewares/auth.mdw');
 const tokenService = require('../services/token.service')
 const upload = require("../utils/upload");
+const auth = require('../middlewares/auth.mdw');
+const {ROLE} = require('../utils/constants')
 
 //create a course
-router.post('/', auth('teacher'), upload.single("image"), asyncHandler(async (req, res, next) => {
+router.post('/', auth([ROLE.TEACHER]), upload.single("image"), asyncHandler(async (req, res, next) => {
     console.log('post');
     const decoded = tokenService.getPayloadFromRequest(req);
     const teacherId = decoded.userId;
@@ -57,20 +58,20 @@ router.get('/:courseId', asyncHandler(async (req, res, next) => {
 );
 
 
-router.put('/:courseId', auth('teacher'), asyncHandler(async (req, res, next) => {
+router.put('/:courseId', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const course = await courseService.updateCourse(courseId, teacherId, req.body);
     return res.status(httpStatus.OK).json(course);
 }));
 
-router.delete('/:courseId', auth('admin'), asyncHandler(async (req, res, next) => {
+router.delete('/:courseId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     await courseService.deleteCourse(courseId);
     return res.status(httpStatus.NO_CONTENT).json();
 }));
 
-router.get('/:courseId/enrollments', auth('teacher'), asyncHandler(async (req, res, next) => {
+router.get('/:courseId/enrollments', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const {courseId}=req.params;
     const enrollments = await courseService.getEnrollmentsByCourseId(courseId, teacherId);
@@ -78,14 +79,14 @@ router.get('/:courseId/enrollments', auth('teacher'), asyncHandler(async (req, r
 })
 );
 
-router.post('/:courseId/enrollments', auth(), asyncHandler(async (req, res, next) => {
+router.post('/:courseId/enrollments', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const userId = tokenService.getPayloadFromRequest(req).userId;
     const enrollment = await courseService.enrollStudent(req.params.courseId, userId);
     return res.status(httpStatus.CREATED).json(enrollment);
 })
 );
 
-router.post('/:courseId/reviews', auth(), asyncHandler(async (req, res, next) => {
+router.post('/:courseId/reviews', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const { review, rating } = req.body;
     const courseId = req.params.courseId;
     const userId = tokenService.getPayloadFromRequest(req).userId;
@@ -95,7 +96,7 @@ router.post('/:courseId/reviews', auth(), asyncHandler(async (req, res, next) =>
 );
 
 //upload course image
-router.put('/:courseId/image', auth('teacher'), upload.single("image"), asyncHandler(async (req, res, next) => {
+router.put('/:courseId/image', auth([ROLE.TEACHER]), upload.single("image"), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const imageUrl = await courseService.uploadCourseImage(req.file, req.params.courseId, teacherId);
     return res.status(httpStatus.CREATED).json({
@@ -105,7 +106,7 @@ router.put('/:courseId/image', auth('teacher'), upload.single("image"), asyncHan
 );
 
 //add course lessons 
-router.post('/:courseId/lessons', auth('teacher'), upload.single("video"), asyncHandler(async (req, res, next) => {
+router.post('/:courseId/lessons', auth([ROLE.TEACHER]), upload.single("video"), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const { name, description } = req.body;
     const { courseId } = req.params;
@@ -135,7 +136,7 @@ router.get('/:courseId/lessons/:lessonNumber', asyncHandler(async (req, res, nex
 );
 
 //update lesson 
-router.put('/:courseId/lessons/:lessonNumber', auth('teacher'), asyncHandler(async (req, res, next) => {
+router.put('/:courseId/lessons/:lessonNumber', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
     const { courseId, lessonNumber } = req.params;
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const lesson = await lessonService.updateLessonInfo(courseId, teacherId, lessonNumber, req.body);
@@ -147,7 +148,7 @@ router.put('/:courseId/lessons/:lessonNumber', auth('teacher'), asyncHandler(asy
 );
 
 //upload lesson video
-router.put('/:courseId/lessons/:lessonNumber/video', auth('teacher'), upload.single("video"), asyncHandler(async (req, res, next) => {
+router.put('/:courseId/lessons/:lessonNumber/video', auth([ROLE.TEACHER]), upload.single("video"), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
     const { courseId, lessonNumber } = req.params;
     const videoUrl = await lessonService.uploadLessonVideo(req.file, teacherId, courseId, lessonNumber);

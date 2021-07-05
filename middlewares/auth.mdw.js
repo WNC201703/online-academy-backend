@@ -4,28 +4,38 @@ const { ROLE } = require('../utils/constants');
 const userService = require('../services/user.service')
 const tokenService = require('../services/token.service')
 
-module.exports = (requiredRole) => (req, res, next) => {
+module.exports = (requiredRoles) => (req, res, next) => {
     return new Promise(async (resolve, reject) => {
         try {
             const token=tokenService.getAccessToken(req);
             const decoded = tokenService.getPayloadFromToken(token)
 
-            if (!!requiredRole) {
+            if (!!requiredRoles) {
                 const user = await userService.getUserById(decoded.userId);
                 if (!user) {
                     reject();
                 }
+                
+                console.log(requiredRoles);
+                let forbidden=true;
+                requiredRoles.forEach(requiredRole => {
+                    if (user.role===requiredRole) {
+                        forbidden=false;
+                        return;
+                    }
+                });
 
-                switch (requiredRole) {
-                    case ROLE.TEACHER:
-                        if (user.role !== ROLE.TEACHER) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
-                        break;
+                if (forbidden) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
+                // switch (requiredRole) {
+                //     case ROLE.TEACHER:
+                //         if (user.role !== ROLE.TEACHER) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
+                //         break;
 
-                    case ROLE.ADMIN:
-                        if (user.role !== ROLE.ADMIN) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
-                        break;
-                    default:
-                }
+                //     case ROLE.ADMIN:
+                //         if (user.role !== ROLE.ADMIN) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
+                //         break;
+                //     default:
+                // }
             }
         } catch (err) {
             reject(err);

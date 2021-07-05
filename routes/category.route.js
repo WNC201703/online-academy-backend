@@ -1,13 +1,14 @@
 const express = require('express');
-const httpStatus = require("http-status");
 const router = express.Router();
+const httpStatus = require("http-status");
+const asyncHandler = require('../utils/asyncHandler')
 const categoryService = require('../services/category.service');
 const courseService = require('../services/course.service');
-const asyncHandler = require('../utils/asyncHandler')
 const auth = require('../middlewares/auth.mdw');
+const {ROLE} = require('../utils/constants')
 
 //create a category
-router.post('/', auth('admin'), asyncHandler(async (req, res, next) => {
+router.post('/', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
     console.log('post');
     const { parent, name } = req.body;
     const category = await categoryService.createCategory(parent, name);
@@ -49,14 +50,14 @@ router.get('/:categoryId/courses', asyncHandler(async (req, res, next) => {
 );
 
 
-router.put('/:categoryId', auth('admin'), asyncHandler(async (req, res, next) => {
+router.put('/:categoryId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
     console.log(categoryId);
     const category = await categoryService.updateCategory(categoryId, req.body);
     return res.status(httpStatus.OK).json(category);
 }));
 
-router.delete('/:categoryId', auth('admin'), asyncHandler(async (req, res, next) => {
+router.delete('/:categoryId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
     const categoryId = req.params.categoryId;
     const result = await categoryService.deleteCategory(categoryId);
     return res.status(httpStatus.NO_CONTENT).json();
