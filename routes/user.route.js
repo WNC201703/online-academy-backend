@@ -43,8 +43,8 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 })
 );
 
-//update user info by admin
-router.put('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
+//update user info 
+router.put('/:userId', auth([ROLE.ADMIN,ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
   const user = await userService.updateUserInfoByAdmin(userId, req.body);
   return res.status(httpStatus.OK).json({ user });

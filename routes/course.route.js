@@ -120,7 +120,7 @@ router.post('/:courseId/lessons', auth([ROLE.TEACHER]), upload.single("video"), 
 router.get('/:courseId/lessons', asyncHandler(async (req, res, next) => {
     const { courseId } = req.params;
     const lessons = await lessonService.getAllLessons(courseId);
-    return res.status(httpStatus.CREATED).json(lessons);
+    return res.status(httpStatus.OK).json(lessons);
 })
 );
 
