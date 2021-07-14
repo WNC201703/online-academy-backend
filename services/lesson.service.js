@@ -1,5 +1,6 @@
 const courseModel = require("../models/course.model");
 const lessonModel = require("../models/lesson.model");
+const enrollment = require("../models/enrollment.model");
 const completedLessonModel = require("../models/completedLesson.model");
 const { Lesson } = lessonModel;
 const ApiError = require('../utils/ApiError');
@@ -27,6 +28,8 @@ async function addLesson(courseId, teacherId, name, description, video) {
 }
 
 async function getAllLessons(userId, courseId) {
+    const enrollment = await enrollmentModel.get(courseId, userId);
+    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid");
     const lessons = await lessonModel.getAllLessons(courseId);
     const data = await completedLessonModel.get(userId, courseId);
     const completedLessons = data.map((item) => '' + item.lesson);

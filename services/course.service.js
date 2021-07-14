@@ -191,7 +191,7 @@ async function getEnrollmentsByStudentId(studentId) {
 
 async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
-    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Not valid student");
+    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid");
     const exists = await reviewModel.exists(enrollment._id);
     if (exists) throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
     const result = await reviewModel.add(enrollment._id, courseId, userId, review, rating);
