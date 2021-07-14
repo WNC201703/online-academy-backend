@@ -126,7 +126,8 @@ router.post('/:courseId/lessons', auth([ROLE.TEACHER]), upload.single("video"), 
 //get course lessons 
 router.get('/:courseId/lessons', auth([ROLE.STUDENT]),asyncHandler(async (req, res, next) => {
     const { courseId } = req.params;
-    const lessons = await lessonService.getAllLessons(courseId);
+    const userId= tokenService.getPayloadFromRequest(req).userId;
+    const lessons = await lessonService.getAllLessons(userId,courseId);
     return res.status(httpStatus.OK).json(lessons);
 })
 );
