@@ -5,7 +5,8 @@ const { Course } = courseModel;
 const { Review } = require("../models/review.model");
 const { Enrollment } = require("../models/enrollment.model");
 const favoriteModel = require("../models/favorite.model");
-const learningProgressModel = require("../models/learningProgress.model");
+const enrollmentModel = require("../models/enrollment.model");
+const completedLessonModel = require("../models/completedLesson.model");
 const tokenService = require('../services/token.service');
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
@@ -189,14 +190,22 @@ async function unFavoriteCourse(userId, courseId) {
   return result;
 }
 
+async function getCompletedLessons(userId,courseId) {
+  const erm=await enrollmentModel.exists(courseId,userId);
+  if (!erm) throw new ApiError(httpStatus.BAD_REQUEST,'');
+
+  const completedLessons=await completedLessonModel.get(userId,courseId);
+  return completedLessons.map((item)=> item.lesson);
+}
+
 async function completedLesson(userId, courseId, lessonId) {
-  const completed = await learningProgressModel.exists(userId, courseId, lessonId);
+  const completed = await completedLessonModel.exists(userId, courseId, lessonId);
   if (completed) return completed;
-  const result = await learningProgressModel.add(userId, courseId, lessonId);
+  const result = await completedLessonModel.add(userId, courseId, lessonId);
   return result;
 }
 async function deleteCompletedLesson(userId, courseId, lessonId) {
-  const result = await learningProgressModel.deleteLearningProgress(userId, courseId,lessonId);
+  const result = await completedLessonModel.deleteCompletedLesson(userId, courseId,lessonId);
   console.log(result);
   return result;
 }
@@ -233,6 +242,7 @@ module.exports = {
   favoriteCourse,
   unFavoriteCourse,
 
+  getCompletedLessons,
   completedLesson,
   deleteCompletedLesson,
 

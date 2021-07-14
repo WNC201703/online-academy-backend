@@ -152,6 +152,16 @@ router.get('/:userId/favorites', auth([ROLE.STUDENT]), asyncHandler(async (req, 
 })
 );
 
+
+router.get('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const courseId = req.params.courseId;
+  const results=await userService.getCompletedLessons(userId, courseId);
+  return res.status(httpStatus.OK).json(results);
+})
+);
+
+
 router.post('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
