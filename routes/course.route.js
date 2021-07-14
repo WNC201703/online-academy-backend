@@ -132,6 +132,14 @@ router.get('/:courseId/lessons', auth([ROLE.STUDENT]),asyncHandler(async (req, r
 })
 );
 
+//get preview lessons 
+router.get('/:courseId/preview',asyncHandler(async (req, res, next) => {
+    const { courseId } = req.params;
+    const lessons = await lessonService.getPreviewLessons(courseId);
+    return res.status(httpStatus.OK).json(lessons);
+})
+);
+
 //get course lesson by lessonNumber 
 router.get('/:courseId/lessons/:lessonNumber',auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const { courseId, lessonNumber } = req.params;

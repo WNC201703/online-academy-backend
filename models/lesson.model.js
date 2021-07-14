@@ -46,6 +46,11 @@ async function getAllLessons(courseId){
     return lessons;
 }
 
+async function getPreviewLessons(courseId){
+    const lessons = await Lesson.find({ course: courseId }).select('-__v').sort({ lessonNumber: 1 });
+    return lessons;
+}
+
 async function getLessonByLessonNumber(courseId,lessonNumber){
     const lesson = await Lesson.findOne({ course: courseId ,lessonNumber:lessonNumber});
     return lesson;
@@ -67,6 +72,7 @@ module.exports = {
     Lesson,
     addLesson,
     getAllLessons,
+    getPreviewLessons,
     getLessonByLessonNumber,
     updateLesson,
     deleteCourseLessons,

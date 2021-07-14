@@ -1,6 +1,6 @@
 const courseModel = require("../models/course.model");
 const lessonModel = require("../models/lesson.model");
-const enrollment = require("../models/enrollment.model");
+const enrollmentModel = require("../models/enrollment.model");
 const completedLessonModel = require("../models/completedLesson.model");
 const { Lesson } = lessonModel;
 const ApiError = require('../utils/ApiError');
@@ -44,6 +44,16 @@ async function getAllLessons(userId, courseId) {
     return lessons;
 }
 
+async function getPreviewLessons(courseId){
+    const lessons = await lessonModel.getPreviewLessons(courseId);
+    lessons.forEach(element => {
+        if (element._doc.lessonNumber>3) {
+            element._doc.videoUrl=null;
+        }
+    });
+    return lessons;
+}
+
 async function getLessonByLessonNumber(courseId, lessonNumber) {
     const lesson = await lessonModel.getLessonByLessonNumber(courseId, lessonNumber);
     return lesson;
@@ -76,6 +86,7 @@ async function verifyTeacher(courseId, teacherId) {
 module.exports = {
     addLesson,
     getAllLessons,
+    getPreviewLessons,
     getLessonByLessonNumber,
     uploadLessonVideo,
     updateLessonInfo,
