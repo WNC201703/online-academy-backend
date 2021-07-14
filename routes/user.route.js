@@ -3,10 +3,11 @@ const router = express.Router();
 const httpStatus = require("http-status");
 const asyncHandler = require('../utils/asyncHandler')
 const userService = require('../services/user.service');
-const tokenService = require('../services/token.service')
+const tokenService = require('../services/token.service');
 const courseService = require('../services/course.service');
 const auth = require('../middlewares/auth.mdw');
 const { ROLE } = require('../utils/constants');
+const ApiError = require('../utils/ApiError');
 
 //create a student
 router.post('/', asyncHandler(async (req, res, next) => {
@@ -144,6 +145,31 @@ router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler
 })
 );
 
+router.get('/:userId/favorites', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const results = await userService.getFavoriteCourses(userId);
+  return res.status(httpStatus.OK).json(results);
+})
+);
 
+router.post('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const courseId = req.params.courseId;
+  const lessonId = req.body.lessonId;
+  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST,'lessonId is required');
+  await userService.completedLesson(userId, courseId, lessonId);
+  return res.status(httpStatus.CREATED).json();
+})
+);
+
+router.delete('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const courseId = req.params.courseId;
+  const lessonId = req.body.lessonId;
+  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST,'lessonId is required');
+  await userService.deleteCompletedLesson(userId, courseId,lessonId);
+  return res.status(httpStatus.NO_CONTENT).json();
+})
+);
 
 module.exports = router;

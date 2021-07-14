@@ -2,13 +2,14 @@ const userModel = require("../models/user.model");
 const { User } = require("../models/user.model");
 const courseModel = require("../models/course.model");
 const { Course } = courseModel;
-const {Review} = require("../models/review.model");
-const {Enrollment} = require("../models/enrollment.model");
+const { Review } = require("../models/review.model");
+const { Enrollment } = require("../models/enrollment.model");
 const favoriteModel = require("../models/favorite.model");
-
+const learningProgressModel = require("../models/learningProgress.model");
+const tokenService = require('../services/token.service');
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
-const {generateAccessToken} = require('./token.service');
+const { generateAccessToken } = require('./token.service');
 
 const ApiError = require('../utils/ApiError');
 const jwt = require('jsonwebtoken');
@@ -54,9 +55,9 @@ async function deleteUser(userId) {
   const user = await userModel.getUserById(userId);
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Course not found user");
   if (user.role === ROLE.STUDENT) {
-    await Review.deleteMany({user:userId});
+    await Review.deleteMany({ user: userId });
     console.log('deleted reviews:', user.fullname);
-    await Enrollment.deleteMany({student:userId});
+    await Enrollment.deleteMany({ student: userId });
     console.log('deleted enrollments:', user.fullname);
     await userModel.deleteUser(userId);
     console.log('deleted user');
@@ -122,7 +123,7 @@ async function login(body) {
 
     const success = await user.validatePassword(password);
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
-    const accessToken = generateAccessToken(user.email, user._id,user.role);
+    const accessToken = generateAccessToken(user.email, user._id, user.role);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
@@ -165,26 +166,38 @@ async function resetPassword(userId, currentPassword, newPassword) {
   return user;
 }
 
-async function getFavoriteCourses(userId){
-  const favorites=await favoriteModel.getByUserId(userId);
-  const results=[];
+async function getFavoriteCourses(userId) {
+  const favorites = await favoriteModel.getByUserId(userId);
+  const results = [];
   favorites.forEach(element => {
     let data = { ...element._doc };
-  data.course = element._doc.course._id;
-  data['courseName'] = element._doc.course.name;
-  results.push(data);
+    data.course = element._doc.course._id;
+    data['courseName'] = element._doc.course.name;
+    results.push(data);
   });
-  
+
   return results;
 }
-async function favoriteCourse(userId,courseId){
-  const favorite=await favoriteModel.get(userId,courseId); 
+async function favoriteCourse(userId, courseId) {
+  const favorite = await favoriteModel.get(userId, courseId);
   if (favorite) return favorite;
-  const result=await favoriteModel.add(userId,courseId);
+  const result = await favoriteModel.add(userId, courseId);
   return result;
 }
-async function unFavoriteCourse(userId,courseId){
-  const result=await favoriteModel.deleteUserFavorite(userId,courseId);
+async function unFavoriteCourse(userId, courseId) {
+  const result = await favoriteModel.deleteUserFavorite(userId, courseId);
+  return result;
+}
+
+async function completedLesson(userId, courseId, lessonId) {
+  const completed = await learningProgressModel.exists(userId, courseId, lessonId);
+  if (completed) return completed;
+  const result = await learningProgressModel.add(userId, courseId, lessonId);
+  return result;
+}
+async function deleteCompletedLesson(userId, courseId, lessonId) {
+  const result = await learningProgressModel.deleteLearningProgress(userId, courseId,lessonId);
+  console.log(result);
   return result;
 }
 
@@ -203,6 +216,8 @@ function parseUserId(request, isAdmin) {
   return paramUserId;
 }
 module.exports = {
+  parseUserId,
+
   signUp,
   sendVerificationEmail,
   verifyUserEmail,
@@ -213,10 +228,14 @@ module.exports = {
   resetPassword,
   createTeacher,
   deleteUser,
+
   getFavoriteCourses,
   favoriteCourse,
   unFavoriteCourse,
-  parseUserId,
+
+  completedLesson,
+  deleteCompletedLesson,
+
   // join
 }
 
