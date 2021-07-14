@@ -117,7 +117,7 @@ router.post('/:courseId/lessons', auth([ROLE.TEACHER]), upload.single("video"), 
 );
 
 //get course lessons 
-router.get('/:courseId/lessons', asyncHandler(async (req, res, next) => {
+router.get('/:courseId/lessons', auth([ROLE.STUDENT]),asyncHandler(async (req, res, next) => {
     const { courseId } = req.params;
     const lessons = await lessonService.getAllLessons(courseId);
     return res.status(httpStatus.OK).json(lessons);
@@ -125,7 +125,7 @@ router.get('/:courseId/lessons', asyncHandler(async (req, res, next) => {
 );
 
 //get course lesson by lessonNumber 
-router.get('/:courseId/lessons/:lessonNumber', asyncHandler(async (req, res, next) => {
+router.get('/:courseId/lessons/:lessonNumber',auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const { courseId, lessonNumber } = req.params;
     const lesson = await lessonService.getLessonByLessonNumber(courseId, lessonNumber);
     if (!lesson) res.status(httpStatus.NOT_FOUND).json({

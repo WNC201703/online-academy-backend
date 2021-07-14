@@ -11,7 +11,7 @@ async function addLesson(courseId, teacherId, name, description, video) {
     if (video) {
         try {
             const uploadResponse = await cloudinary.uploader.upload(video.path,
-                { resource_type: "video", public_id: `courses/${courseId}/lessons/${lesson.lessonNumber}` });
+                { resource_type: "video", public_id: `courses/${courseId}/lessons/lesson${lesson.lessonNumber}` });
             console.log(uploadResponse);
             const uLesson = await lessonModel.updateLesson(courseId, lesson.lessonNumber, { videoUrl: uploadResponse.secure_url });
             return uLesson;
