@@ -12,7 +12,7 @@ const ApiError = require('../utils/ApiError');
 //create a student
 router.post('/', asyncHandler(async (req, res, next) => {
   await userService.signUp(req.body);
-  return res.status(httpStatus.CREATED).json({ success: true });
+  return res.status(httpStatus.CREATED).json({ success: true,message:'A verification email has been sent to email' });
 })
 );
 
@@ -90,7 +90,8 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
   const isSuccessful = await userService.verifyUserEmail(req.params.token);
   if (isSuccessful) {
     return res.status(httpStatus.OK).json({
-      success: true
+      success: true,
+      message:'Your account has been successfully verified'
     });
   }
   else {

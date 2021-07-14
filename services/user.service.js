@@ -1,19 +1,19 @@
 const userModel = require("../models/user.model");
-const { User } = require("../models/user.model");
 const courseModel = require("../models/course.model");
+const { User } = require("../models/user.model");
 const { Course } = courseModel;
 const { Review } = require("../models/review.model");
 const { Enrollment } = require("../models/enrollment.model");
 const favoriteModel = require("../models/favorite.model");
 const enrollmentModel = require("../models/enrollment.model");
 const completedLessonModel = require("../models/completedLesson.model");
+const tokenModel = require("../models/token.model");
+const { Token } = tokenModel;
 const tokenService = require('../services/token.service');
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
 const { generateAccessToken } = require('./token.service');
-
 const ApiError = require('../utils/ApiError');
-const jwt = require('jsonwebtoken');
 const { ROLE } = require('../utils/constants');
 const httpStatus = require('http-status')
 
@@ -83,11 +83,14 @@ async function getAllUsers(role) {
 
 const sendVerificationEmail = async (email) => {
   const user = await userModel.getUserByEmail(email);
-  if (!!user) {
+
+  if (!user) throw new ApiError(httpStatus.BAD_REQUEST, 'We were unable to find a user with that email. Make sure your Email is correct!');
+
+  if (user.active) throw new ApiError(httpStatus.OK, 'This account has been already verified. Please log in.');
+  else {
     const verificationToken = require('crypto').randomBytes(48).toString('hex');
-    user.verification_token = verificationToken;
-    await user.save();
-    if (user.verification_token === verificationToken) {
+    const token = await tokenModel.add(user._id, verificationToken);
+    if (token.token === verificationToken) {
       try {
         mailService.sendVerificationEmail(verificationToken, email);
       } catch (err) {
@@ -96,24 +99,22 @@ const sendVerificationEmail = async (email) => {
       }
     } else throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'ERROR');
   }
-  else {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Email not exists");
-  }
 }
 
 const verifyUserEmail = async (token) => {
-  const user = await User.findOne({ verification_token: token });
 
-  if (!!user) {
-    user.active = true;
-    user.verification_token = '';
-    await user.save();
-    if (user.active) return true;
-  }
+  const vrToken = await Token.findOne({ token: token });
+  if (!vrToken) throw new ApiError(httpStatus.UNAUTHORIZED, 'Your verification link may have expired. Please click on resend for verify your Email.');
+
+  const user = await User.findOne({ _id: vrToken.user });
+  if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification. Please SignUp!');
+
+  if (user.active) throw new ApiError(httpStatus.OK, 'User has been already verified. Please Login');
   else {
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'expired');
+    user.active = true;
+    await user.save();
   }
-  return false;
+  return true;
 };
 
 async function login(body) {
@@ -190,12 +191,12 @@ async function unFavoriteCourse(userId, courseId) {
   return result;
 }
 
-async function getCompletedLessons(userId,courseId) {
-  const erm=await enrollmentModel.exists(courseId,userId);
-  if (!erm) throw new ApiError(httpStatus.BAD_REQUEST,'');
+async function getCompletedLessons(userId, courseId) {
+  const erm = await enrollmentModel.exists(courseId, userId);
+  if (!erm) throw new ApiError(httpStatus.BAD_REQUEST, '');
 
-  const completedLessons=await completedLessonModel.get(userId,courseId);
-  return completedLessons.map((item)=> item.lesson);
+  const completedLessons = await completedLessonModel.get(userId, courseId);
+  return completedLessons.map((item) => item.lesson);
 }
 
 async function completedLesson(userId, courseId, lessonId) {
@@ -205,7 +206,7 @@ async function completedLesson(userId, courseId, lessonId) {
   return result;
 }
 async function deleteCompletedLesson(userId, courseId, lessonId) {
-  const result = await completedLessonModel.deleteCompletedLesson(userId, courseId,lessonId);
+  const result = await completedLessonModel.deleteCompletedLesson(userId, courseId, lessonId);
   console.log(result);
   return result;
 }
