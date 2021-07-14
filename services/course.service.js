@@ -176,7 +176,17 @@ async function getEnrollmentsByCourseId(courseId, teacherId) {
 
 async function getEnrollmentsByStudentId(studentId) {
     const erollments = await enrollmentModel.getByStudentId(studentId);
-    return erollments;
+    const results = [];
+    erollments.forEach(element => {
+        if (element){
+        let data = { ...element._doc };
+        data.course = element._doc.course._id;
+        data['courseName'] = element._doc.course.name;
+        results.push(data);
+    }
+    });
+
+    return results;
 }
 
 async function addReview(courseId, userId, review, rating) {

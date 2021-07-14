@@ -93,7 +93,8 @@ router.put('/password/reset', auth([ROLE.STUDENT]), asyncHandler(async (req, res
   return res.status(httpStatus.OK).json({ user });
 }));
 
-router.get('/:userId/enrollments', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+//get enrollments
+router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const userId = tokenService.getPayloadFromRequest(req).userId;
   if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
   const enrollments = await courseService.getEnrollmentsByStudentId(userId);
