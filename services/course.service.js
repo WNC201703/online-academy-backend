@@ -4,6 +4,7 @@ const reviewModel = require("../models/review.model");
 const enrollmentModel = require("../models/enrollment.model");
 const lessonModel = require("../models/lesson.model");
 const { Review } = reviewModel;
+const { Course } = courseModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const cloudinary = require('../utils/cloudinary');
@@ -48,13 +49,13 @@ async function getCourseById(courseId) {
     ]);
 
     const count = await enrollmentModel.countByCourseId(courseId);
-    let data=course._doc;
-        data.teacher=course._doc.teacher.fullname;
-        data.category=course._doc.category.name;
+    let data = course._doc;
+    data.teacher = course._doc.teacher.fullname;
+    data.category = course._doc.category.name;
     return {
         ...data,
-        averageRating: courseReview[0]?courseReview[0].avgRating:0,
-        numberOfReviews: courseReview[0]? courseReview[0].numberOfReviews:0,
+        averageRating: courseReview[0] ? courseReview[0].avgRating : 0,
+        numberOfReviews: courseReview[0] ? courseReview[0].numberOfReviews : 0,
         enrollments: count
     };
 }
@@ -68,25 +69,55 @@ async function getAll() {
 
 async function getPopularCourses() {
     const courses = await courseModel.getPopularCourses();
-    const results=await getCoursesResponseData(courses);
+    const results = await getCoursesResponseData(courses);
     return results;
 }
 
 async function getNewestCourses() {
     const courses = await courseModel.getNewestCourses();
-    const results=await getCoursesResponseData(courses);
+    const results = await getCoursesResponseData(courses);
     return results;
 }
 
 async function getTopViewedCourses() {
     const courses = await courseModel.getTopViewedCourses();
-    const results=await getCoursesResponseData(courses);
+    const results = await getCoursesResponseData(courses);
+    return results;
+}
+
+async function getRelatedCourses(courseId) {
+    const course = await Course.findById(courseId);
+    const count = await Course.find({ category: course.category }).countDocuments();
+    const relatedId = [];
+    if (count <= 5) {
+        const relatedCourses = await Course.find({ category: course.category });
+        return relatedCourses;
+    }
+
+    while (relatedId.length < 5) {
+        const randomNumber = Math.floor(Math.random() * count);
+        const randomCourse = await Course.find({ category: course.category }).skip(randomNumber).select('_id').limit(1);
+        const randomCourseId = '' + randomCourse[0]._id;
+        if (!(relatedId.indexOf(randomCourseId) > -1)) {
+            relatedId.push(randomCourseId);
+        }
+    }
+    const relatedCourses = await Course.find(
+        {
+            _id: {
+                $in:
+                    relatedId
+            }
+        }
+    );
+    const results = await getCoursesResponseData(relatedCourses);
+
     return results;
 }
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     if (!pageNumber) pageNumber = 1;
-    if (pageSize!==0 && !pageSize) pageSize = 10;
+    if (pageSize !== 0 && !pageSize) pageSize = 10;
     let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
     if (sortBy) {
@@ -98,11 +129,11 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     }
     const { courses, totalCount } = await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword, categories);
 
-    const results=await getCoursesResponseData(courses);
-    
-    const totalPages = totalCount === 0 ? 1 : (pageSize===0) ? 1 :Math.ceil(totalCount / pageSize);
+    const results = await getCoursesResponseData(courses);
+
+    const totalPages = totalCount === 0 ? 1 : (pageSize === 0) ? 1 : Math.ceil(totalCount / pageSize);
     return {
-        "pageSize": pageSize===0 ? totalCount : pageSize,
+        "pageSize": pageSize === 0 ? totalCount : pageSize,
         "pageNumber": pageNumber ? pageNumber : 1,
         "totalPages": totalPages,
         "totalResults": totalCount,
@@ -112,21 +143,21 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 
 async function updateCourse(courseId, teacherId, body) {
     const { imageUrl, view, ...newData } = body;
-    await verifyTeacher(courseId,teacherId);
+    await verifyTeacher(courseId, teacherId);
     const course = await courseModel.updateCourse(courseId, newData);
     return course;
 }
 
 async function deleteCourse(courseId) {
-    const exists=await courseModel.exists(courseId);
-    if (!exists) throw  new ApiError(httpStatus.BAD_REQUEST, "Course not found");
+    const exists = await courseModel.exists(courseId);
+    if (!exists) throw new ApiError(httpStatus.BAD_REQUEST, "Course not found");
     await lessonModel.deleteCourseLessons(courseId);
     await reviewModel.deleteCourseReviews(courseId);
     await enrollmentModel.deleteCourseEnrollments(courseId);
     // await favouriteModel.deleteCourseFavourites(courseId);
     await courseModel.deleteCourse(courseId);
-    const existsAfterDelete=await courseModel.exists(courseId);
-    if (existsAfterDelete)  throw  new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+    const existsAfterDelete = await courseModel.exists(courseId);
+    if (existsAfterDelete) throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
     return existsAfterDelete;
 }
 
@@ -138,7 +169,7 @@ async function enrollStudent(courseId, studentId) {
 }
 
 async function getEnrollmentsByCourseId(courseId, teacherId) {
-    await verifyTeacher(courseId,teacherId);
+    await verifyTeacher(courseId, teacherId);
     const erollments = await enrollmentModel.getByCourseId(courseId);
     return erollments;
 }
@@ -158,7 +189,7 @@ async function addReview(courseId, userId, review, rating) {
 }
 
 async function uploadCourseImage(file, courseId, teacherId) {
-    await verifyTeacher(courseId,teacherId);
+    await verifyTeacher(courseId, teacherId);
     try {
         const uploadResponse = await cloudinary.uploader.upload(file.path,
             { public_id: `courses/${courseId}/image` });
@@ -170,12 +201,12 @@ async function uploadCourseImage(file, courseId, teacherId) {
     }
 }
 
-async function verifyTeacher(courseId,teacherId){
+async function verifyTeacher(courseId, teacherId) {
     const verified = await courseModel.verifyTeacher(courseId, teacherId);
     if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
 
-async function getCoursesResponseData(courses){
+async function getCoursesResponseData(courses) {
     const coursesReview = await Review.aggregate([
         {
             $match: {
@@ -207,9 +238,9 @@ async function getCoursesResponseData(courses){
 
     let results = [];
     courses.forEach(element => {
-        let data=element._doc;
-        data.teacher=element._doc.teacher.fullname;
-        data.category=element._doc.category.name;
+        let data = element._doc;
+        data.teacher = element._doc.teacher.fullname;
+        data.category = element._doc.category.name;
         results.push({
             ...data,
             averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
@@ -232,6 +263,7 @@ module.exports = {
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
+    getRelatedCourses,
     addReview,
     uploadCourseImage,
 }

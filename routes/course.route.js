@@ -50,6 +50,13 @@ router.get('/top_viewed', asyncHandler(async (req, res, next) => {
 })
 );
 
+//get related courses
+router.get('/:courseId/related', asyncHandler(async (req, res, next) => {
+    const courses = await courseService.getRelatedCourses(req.params.courseId);
+    return res.status(httpStatus.OK).json(courses);
+})
+);
+
 router.get('/:courseId', asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const course = await courseService.getCourseById(courseId);
