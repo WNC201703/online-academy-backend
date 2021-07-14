@@ -143,7 +143,7 @@ async function getUserById(userId) {
 async function updateUserInfoByAdmin(userId, body) {
   let user = await userModel.getUserById(userId);
   const { fullname, email, password } = body;
-  
+
   //only allow email update for teacher
   if (email && user.role === ROLE.TEACHER) user.email = email;
   if (fullname) user.fullname = fullname;
@@ -188,7 +188,20 @@ async function unFavoriteCourse(userId,courseId){
   return result;
 }
 
+function parseUserId(request, isAdmin) {
+  const paramUserId = request.params.userId;
+  const decodedUserId = tokenService.getPayloadFromRequest(request).userId;
+  //return user id by bearer token 
+  if (paramUserId === 'me') {
+    return decodedUserId;
+  }
+  //if not admin => recheck paramId and decoded id
+  if (!isAdmin) {
+    if (decodedUserId != paramUserId) throw new ApiError(httpStatus.UNAUTHORIZED, 'Access Denied');
+  }
 
+  return paramUserId;
+}
 module.exports = {
   signUp,
   sendVerificationEmail,
@@ -203,6 +216,7 @@ module.exports = {
   getFavoriteCourses,
   favoriteCourse,
   unFavoriteCourse,
+  parseUserId,
   // join
 }
 
