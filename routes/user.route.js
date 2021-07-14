@@ -6,7 +6,8 @@ const userService = require('../services/user.service');
 const tokenService = require('../services/token.service')
 const courseService = require('../services/course.service');
 const auth = require('../middlewares/auth.mdw');
-const {ROLE} = require('../utils/constants')
+const { ROLE } = require('../utils/constants');
+const ApiError = require('../utils/ApiError');
 
 //create a student
 router.post('/', asyncHandler(async (req, res, next) => {
@@ -44,26 +45,39 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 );
 
 //update user info 
-router.put('/:userId', auth([ROLE.ADMIN,ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const { userId } = req.params;
-  const user = await userService.updateUserInfoByAdmin(userId, req.body);
-  return res.status(httpStatus.OK).json({ user });
+router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
+  const role = tokenService.getPayloadFromRequest(req).role;
+  if (role === ROLE.ADMIN) {
+    const user = await userService.updateUserInfoByAdmin(userId, req.body);
+    return res.status(httpStatus.OK).json({ user });
+  }
+  else {
+    //........
+    //........
+    //........
+    //........
+    //........
+    //........
+  }
 }));
 
 //get user by id
-router.get('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
-  const user = await userService.getUserById(req.params.userId);
-  return res.status(httpStatus.OK).json(user);
-})
-);
-
-//get personal info
-router.get('/me/info', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
+router.get('/:userId', auth(), asyncHandler(async (req, res, next) => {
+  const role = tokenService.getPayloadFromRequest(req).role;
+  const idAdmin = role === ROLE.ADMIN;
+  const userId = parseUserId(req, idAdmin);
   const user = await userService.getUserById(userId);
   return res.status(httpStatus.OK).json(user);
 })
 );
+
+// //get personal info
+// router.get('/me/info', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+//   const userId = tokenService.getPayloadFromRequest(req).userId;
+//   const user = await userService.getUserById(userId);
+//   return res.status(httpStatus.OK).json(user);
+// })
+// );
 
 router.post('/email/verify/send', asyncHandler(async (req, res, next) => {
   const { email } = req.body;
@@ -86,17 +100,16 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
   }
 }));
 
-router.put('/password/reset', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+router.put('/:userId/password/reset', auth(), asyncHandler(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
-  const userId = tokenService.getPayloadFromRequest(req).userId;
+  const userId = parseUserId(req, false);
   const user = await userService.resetPassword(userId, currentPassword, newPassword);
   return res.status(httpStatus.OK).json({ user });
 }));
 
 //get enrollments
 router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
-  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+  const userId = parseUserId(req, false);
   const enrollments = await courseService.getEnrollmentsByStudentId(userId);
   return res.status(httpStatus.CREATED).json(enrollments);
 })
@@ -110,18 +123,14 @@ router.delete('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next
 );
 
 router.get('/:userId/favorites', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
-  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
-
+  const userId = parseUserId(req, false);
   const results = await userService.getFavoriteCourses(userId);
   return res.status(httpStatus.OK).json(results);
 })
 );
 
 router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
-  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
-
+  const userId = parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.favoriteCourse(userId, courseId);
   return res.status(httpStatus.OK).json(result);
@@ -129,13 +138,26 @@ router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(as
 );
 
 router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
-  const userId = tokenService.getPayloadFromRequest(req).userId;
-  if (userId !== req.params.userId) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
-
+  const userId = parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.unFavoriteCourse(userId, courseId);
   return res.status(httpStatus.NO_CONTENT).json();
 })
 );
+
+function parseUserId(request, isAdmin) {
+  const paramUserId = request.params.userId;
+  const decodedUserId = tokenService.getPayloadFromRequest(request).userId;
+  //return user id by bearer token 
+  if (paramUserId === 'me') {
+    return decodedUserId;
+  }
+  //if not admin => recheck paramId and decoded id
+  if (!isAdmin) {
+    if (decodedUserId != paramUserId) throw new ApiError(httpStatus.UNAUTHORIZED, 'Access Denied');
+  }
+
+  return paramUserId;
+}
 
 module.exports = router;

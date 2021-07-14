@@ -8,6 +8,7 @@ const favoriteModel = require("../models/favorite.model");
 
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
+const {generateAccessToken} = require('./token.service');
 
 const ApiError = require('../utils/ApiError');
 const jwt = require('jsonwebtoken');
@@ -121,7 +122,7 @@ async function login(body) {
 
     const success = await user.validatePassword(password);
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
-    const accessToken = generateAccessToken(user.email, user._id);
+    const accessToken = generateAccessToken(user.email, user._id,user.role);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
@@ -141,11 +142,9 @@ async function getUserById(userId) {
 
 async function updateUserInfoByAdmin(userId, body) {
   let user = await userModel.getUserById(userId);
-  // if (body.email && body.email != user.email) {
-  //   user.email = body.email;
-  //   user.active = false;
-  // }
   const { fullname, email, password } = body;
+  
+  //only allow email update for teacher
   if (email && user.role === ROLE.TEACHER) user.email = email;
   if (fullname) user.fullname = fullname;
   if (password) user.password = password;
@@ -189,14 +188,6 @@ async function unFavoriteCourse(userId,courseId){
   return result;
 }
 
-
-function generateAccessToken(email, id) {
-  const payload = {
-    email: email,
-    userId: id
-  }
-  return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '86400s' });
-}
 
 module.exports = {
   signUp,

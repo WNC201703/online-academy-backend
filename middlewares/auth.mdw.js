@@ -26,16 +26,6 @@ module.exports = (requiredRoles) => (req, res, next) => {
                 });
 
                 if (forbidden) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
-                // switch (requiredRole) {
-                //     case ROLE.TEACHER:
-                //         if (user.role !== ROLE.TEACHER) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
-                //         break;
-
-                //     case ROLE.ADMIN:
-                //         if (user.role !== ROLE.ADMIN) return res.status(httpStatus.FORBIDDEN).send('Forbidden');
-                //         break;
-                //     default:
-                // }
             }
         } catch (err) {
             reject(err);
