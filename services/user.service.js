@@ -206,6 +206,7 @@ async function resetPassword(userId, currentPassword, newPassword) {
 
 async function updateEmail(userId, currentPassword, newEmail) {
   const user = await User.findById(userId);
+  if (user.email===newEmail) throw new ApiError(httpStatus.BAD_REQUEST, "Email not valid");
   const valid = await user.validatePassword(currentPassword);
   if (!valid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password incorrect");
   else {
