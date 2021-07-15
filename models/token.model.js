@@ -6,8 +6,7 @@ const tokenSchema = mongoose.Schema(
     {
         user: { type: ObjectId, ref: 'User', required: true },
         token: { type: String, required: true },
-        expireAt: { type: Date, default: Date.now, index: { expires: 86400000 } },
-        createdAt: { type: Date, default: Date.now },
+        expireAt: { type: Date, default: Date.now, index: { expires: '1d' } },
         type: { type: String, default: VERIFY_TOKEN_TYPE.SIGN_UP },
         newEmail: { type: String }
     },
@@ -15,7 +14,8 @@ const tokenSchema = mongoose.Schema(
 
 const Token = mongoose.model('Token', tokenSchema);
 
-async function add(userId, token) {
+async function addTokenForSignUp(userId, token) {
+    await Token.deleteMany({user:userId});
     const newToken = new Token({
         user: userId,
         token: token
@@ -24,7 +24,20 @@ async function add(userId, token) {
     return newToken;
 }
 
+async function addTokenForEmailUpdate(userId, token, newEmail) {
+    await Token.deleteMany({user:userId});
+    const newToken = new Token({
+        user: userId,
+        token: token,
+        type: VERIFY_TOKEN_TYPE.CHANGE_EMAIL,
+        newEmail:newEmail
+    });
+    await newToken.save();
+    return newToken;
+}
+
 module.exports = {
     Token,
-    add
+    addTokenForSignUp,
+    addTokenForEmailUpdate
 };

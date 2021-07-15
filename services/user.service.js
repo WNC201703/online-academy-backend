@@ -14,7 +14,7 @@ const mailService = require('./mail.service');
 const courseService = require('./course.service');
 const { generateAccessToken } = require('./token.service');
 const ApiError = require('../utils/ApiError');
-const { ROLE } = require('../utils/constants');
+const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const httpStatus = require('http-status')
 
 async function signUp(body) {
@@ -89,10 +89,11 @@ const sendVerificationEmail = async (email) => {
   if (user.active) throw new ApiError(httpStatus.OK, 'This account has been already verified. Please log in.');
   else {
     const verificationToken = require('crypto').randomBytes(48).toString('hex');
-    const token = await tokenModel.add(user._id, verificationToken);
+
+    const token = await tokenModel.addTokenForSignUp(user._id, verificationToken);
     if (token.token === verificationToken) {
       try {
-        mailService.sendVerificationEmail(verificationToken, email);
+        mailService.sendTokenToCreateAccount(verificationToken, email);
       } catch (err) {
         console.log(err.message);
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err.message);
@@ -101,20 +102,55 @@ const sendVerificationEmail = async (email) => {
   }
 }
 
+const sendVerificationForNewEmail = async (userId,newEmail) => {
+  const user = await userModel.getUserByEmail(newEmail);
+
+  if (user) throw new ApiError(httpStatus.BAD_REQUEST, 'Email is taken');
+
+  else {
+    const verificationToken = require('crypto').randomBytes(48).toString('hex');
+
+    const token = await tokenModel.addTokenForEmailUpdate(userId, verificationToken, newEmail);
+    if (token.token === verificationToken) {
+      try {
+        mailService.sendTokenToUpdateEmail(verificationToken, newEmail);
+      } catch (err) {
+        console.log(err.message);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err.message);
+      }
+    } else throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'SOMETHING WENT WRONG');
+  }
+}
+
 const verifyUserEmail = async (token) => {
 
   const vrToken = await Token.findOne({ token: token });
   if (!vrToken) throw new ApiError(httpStatus.UNAUTHORIZED, 'Your verification link may have expired. Please click on resend for verify your Email.');
+  console.log(token.type);
+  if (vrToken.type === VERIFY_TOKEN_TYPE.SIGN_UP) {
 
-  const user = await User.findOne({ _id: vrToken.user });
-  if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification. Please SignUp!');
+    const user = await User.findOne({ _id: vrToken.user });
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification. Please SignUp!');
 
-  if (user.active) throw new ApiError(httpStatus.OK, 'User has been already verified. Please Login');
-  else {
-    user.active = true;
-    await user.save();
+    if (user.active) throw new ApiError(httpStatus.OK, 'User has been already verified. Please Login');
+    else {
+      user.active = true;
+      await user.save();
+    }
+    return true;
+
   }
-  return true;
+
+  if (vrToken.type===VERIFY_TOKEN_TYPE.CHANGE_EMAIL){
+    const newEmail=vrToken.newEmail;
+    const user = await User.findOne({ _id: vrToken.user });
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification.!');
+
+    user.email=newEmail;
+    await user.save();
+
+    return true;
+  }
 };
 
 async function login(body) {
@@ -167,6 +203,16 @@ async function resetPassword(userId, currentPassword, newPassword) {
   }
   return user;
 }
+
+async function updateEmail(userId, currentPassword, newEmail) {
+  const user = await User.findById(userId);
+  const valid = await user.validatePassword(currentPassword);
+  if (!valid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password incorrect");
+  else {
+    await sendVerificationForNewEmail(userId,newEmail);
+  }
+}
+
 
 async function getFavoriteCourses(userId) {
   const favorites = await favoriteModel.getByUserId(userId);
@@ -236,6 +282,7 @@ module.exports = {
   getUserById,
   updateUserInfoByAdmin,
   resetPassword,
+  updateEmail,
   createTeacher,
   deleteUser,
 

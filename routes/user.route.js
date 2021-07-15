@@ -6,7 +6,7 @@ const userService = require('../services/user.service');
 const tokenService = require('../services/token.service');
 const courseService = require('../services/course.service');
 const auth = require('../middlewares/auth.mdw');
-const { ROLE } = require('../utils/constants');
+const { ROLE,VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const ApiError = require('../utils/ApiError');
 
 //create a student
@@ -90,13 +90,26 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
   const isSuccessful = await userService.verifyUserEmail(req.params.token);
   if (isSuccessful) {
     return res.status(httpStatus.OK).json({
-      success: true,
       message:'Your account has been successfully verified'
     });
   }
   else {
     return res.status(httpStatus.BAD_REQUEST).json({
-      success: false
+     message:'Your verification link may have expired. Please click on resend for verify your Email#2'
+    });
+  }
+}));
+
+router.get('/new-email/verify/:token', asyncHandler(async (req, res, next) => {
+  const isSuccessful = await userService.verifyUserEmail(req.params.token);
+  if (isSuccessful) {
+    return res.status(httpStatus.OK).json({
+      message:'Your new email has been successfully verified, please login with new email'
+    });
+  }
+  else {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      message:'Your verification link may have expired. Please click on resend for verify your Email#2'
     });
   }
 }));
@@ -106,6 +119,13 @@ router.put('/:userId/password/reset', auth(), asyncHandler(async (req, res, next
   const userId = userService.parseUserId(req, false);
   const user = await userService.resetPassword(userId, currentPassword, newPassword);
   return res.status(httpStatus.OK).json({ user });
+}));
+
+router.put('/:userId/email', auth(), asyncHandler(async (req, res, next) => {
+  const { currentPassword,newEmail} = req.body;
+  const userId = userService.parseUserId(req, false);
+  await userService.updateEmail(userId, currentPassword, newEmail);
+  return res.status(httpStatus.OK).json({message: 'A verification email has been sent to new email'});
 }));
 
 //get enrollments
