@@ -40,8 +40,8 @@ async function exists(enrollmentId) {
     return !!review;
 }
 
-async function get() {
-    const reviews = await Review.find();
+async function getReviewsByCourseId(courseId) {
+    const reviews = await Review.find({courseId});
     return reviews;
 }
 
@@ -54,6 +54,7 @@ async function deleteCourseReviews(courseId) {
 module.exports = {
     Review,
     add,
+    getReviewsByCourseId,
     exists,
     deleteCourseReviews,
 };

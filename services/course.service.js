@@ -178,12 +178,12 @@ async function getEnrollmentsByStudentId(studentId) {
     const erollments = await enrollmentModel.getByStudentId(studentId);
     const results = [];
     erollments.forEach(element => {
-        if (element){
-        let data = { ...element._doc };
-        data.course = element._doc.course._id;
-        data['courseName'] = element._doc.course.name;
-        results.push(data);
-    }
+        if (element) {
+            let data = { ...element._doc };
+            data.course = element._doc.course._id;
+            data['courseName'] = element._doc.course.name;
+            results.push(data);
+        }
     });
 
     return results;
@@ -191,11 +191,40 @@ async function getEnrollmentsByStudentId(studentId) {
 
 async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
-    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid");
+    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Enrollment Not found");
     const exists = await reviewModel.exists(enrollment._id);
     if (exists) throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
     const result = await reviewModel.add(enrollment._id, courseId, userId, review, rating);
     return result;
+}
+
+async function getReviews(courseId, pageNumber, pageSize) {
+    if (!pageNumber) pageNumber = 1;
+    if (pageSize !== 0 && !pageSize) pageSize = 10;
+    console.log(pageSize);
+    const totalCount = await Review.find({ course: courseId }).countDocuments();
+    const reviews = await Review
+        .find({ course: courseId })
+        .sort({ createdAt: -1 })
+        .limit(pageSize)
+        .skip((pageNumber - 1) * pageSize)
+        .select('-__v')
+        .populate('user','fullname');
+
+    reviews.forEach(element => {
+        element._doc.username=element._doc.user.fullname;
+        element._doc.user=element._doc.user._id;
+    });
+
+
+    const totalPages = totalCount === 0 ? 1 : (pageSize === 0) ? 1 : Math.ceil(totalCount / pageSize);
+    return {
+        "pageSize": pageSize === 0 ? totalCount : pageSize,
+        "pageNumber": pageNumber ? pageNumber : 1,
+        "totalPages": totalPages,
+        "totalResults": totalCount,
+        "results": reviews
+    };
 }
 
 async function uploadCourseImage(file, courseId, teacherId) {
@@ -275,6 +304,7 @@ module.exports = {
     getTopViewedCourses,
     getRelatedCourses,
     addReview,
+    getReviews,
     uploadCourseImage,
 }
 

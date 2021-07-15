@@ -93,6 +93,14 @@ router.post('/:courseId/enrollments', auth([ROLE.STUDENT]), asyncHandler(async (
 })
 );
 
+router.get('/:courseId/reviews',  asyncHandler(async (req, res, next) => {
+    const courseId = req.params.courseId;
+    const { page_number, page_size } = req.query;
+    const result = await courseService.getReviews(courseId,+page_number,+page_size);
+    return res.status(httpStatus.OK).json(result);
+})
+);
+
 router.post('/:courseId/reviews', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const { review, rating } = req.body;
     const courseId = req.params.courseId;
