@@ -91,7 +91,8 @@ async function getAll() {
 }
 
 async function getPopularCourses() {
-    const courses = await Course.find().select('-__v').populate('teacher','fullname').populate('category','name');
+    // const courses = await Course.find().select('-__v')
+    // .populate('teacher','fullname').populate('category','name');
     return courses;
 }
 

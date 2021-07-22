@@ -69,9 +69,37 @@ async function getAll() {
 
 
 async function getPopularCourses() {
-    const courses = await courseModel.getPopularCourses();
-    const results = await getCoursesResponseData(courses);
-    return results;
+    // const courses = await courseModel.getPopularCourses();
+    const today = new Date();
+    let sDay = new Date();
+    sDay.setDate(today.getDate() - 7);
+    const enrollmentAggregate = await Enrollment.aggregate([
+        {
+            $match: {
+                createdAt:
+                    { $gte: sDay, $lte: today }
+            }
+        },
+        {
+            $group: {
+                _id: '$course',
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { count: - 1 }
+        },
+        {
+            $limit: 4
+        }
+    ]);
+
+    const courses = await Course.find({
+        _id:{
+            $in: enrollmentAggregate.map(item => item._id)
+        }
+    });
+    return courses;
 }
 
 async function getNewestCourses() {
@@ -88,14 +116,13 @@ async function getTopViewedCourses() {
 
 async function getRelatedCourses(courseId) {
     const course = await Course.findById(courseId);
-    if (!course) throw new ApiError(httpStatus.BAD_REQUEST,'Not found course');
-    const xxx=await Enrollment.find().populate('course','name');
-    const courseAggregate=await Course.aggregate([
+    if (!course) throw new ApiError(httpStatus.BAD_REQUEST, 'Not found course');
+    const courseAggregate = await Course.aggregate([
         {
-            $match:{
-                category:course.category,
-                _id:{
-                    $ne:course._id
+            $match: {
+                category: course.category,
+                _id: {
+                    $ne: course._id
                 }
             },
         },
@@ -103,22 +130,22 @@ async function getRelatedCourses(courseId) {
             $lookup: { from: 'enrollments', localField: '_id', foreignField: 'course', as: 'enrollment' }
         },
         {
-            $project:{
+            $project: {
                 _id: 1,
-                enrollments:{$size:"$enrollment"}
+                enrollments: { $size: "$enrollment" }
             }
         },
         {
             $sort: { enrollments: - 1 }
         },
         {
-            $limit:5
+            $limit: 5
         }
     ]);
-    const courses=await Course.find(
+    const courses = await Course.find(
         {
-            _id:{
-                $in:courseAggregate.map(course => course._id)
+            _id: {
+                $in: courseAggregate.map(course => course._id)
             }
         }
     );
