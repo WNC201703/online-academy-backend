@@ -143,14 +143,14 @@ router.delete('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next
 })
 );
 
-router.get('/:userId/favorites', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+router.get('/:userId/favorites', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const results = await userService.getFavoriteCourses(userId);
   return res.status(httpStatus.OK).json(results);
 })
 );
 
-router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.favoriteCourse(userId, courseId);
@@ -158,7 +158,7 @@ router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(as
 })
 );
 
-router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.unFavoriteCourse(userId, courseId);
