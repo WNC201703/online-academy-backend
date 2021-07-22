@@ -73,7 +73,7 @@ async function getPopularCourses() {
     const today = new Date();
     let sDay = new Date();
     sDay.setDate(today.getDate() - 7);
-    const enrollmentAggregate = await Enrollment.aggregate([
+    const aggregate = await Enrollment.aggregate([
         {
             $match: {
                 createdAt:
@@ -91,25 +91,58 @@ async function getPopularCourses() {
         },
         {
             $limit: 4
+        },
+        {
+            $lookup: { from: 'reviews', localField: '_id', foreignField: 'course', as: 'review' }
+        },
+        {
+            $addFields: {
+                averageRating: {
+                    $avg: "$review.rating",
+                },
+            }
+        },
+        {
+            $project: {
+                _id:1,
+                averageRating: 1,
+                numberOfReviews: { $size: "$review" },
+            }
         }
     ]);
 
     const courses = await Course.find({
         _id: {
-            $in: enrollmentAggregate.map(item => item._id)
+            $in: aggregate.map(item => item._id)
         }
     })
+    .select('-__v')
     .populate('teacher','fullname')
     .populate('category','name');
 
-    //format
-    courses.forEach(element => {
-        let data = element._doc;
-        data.teacher = data.teacher.fullname;
-        data.category = element._doc.category.name;
+    let coursesReview = {};
+    aggregate.forEach(element => {
+        coursesReview[element._id] = {
+            averageRating: element.averageRating,
+            numberOfReviews: element.numberOfReviews
+        };
     });
 
-    return courses;
+    let results = [];
+    courses.forEach(element => {
+        const id=element._id;
+        const reviewObj=coursesReview[id];
+        let data = element._doc;
+        data.teacher = data.teacher.fullname;
+        data.category = data.category.name;
+        results.push({
+            ...data,
+            averageRating:reviewObj ? reviewObj.averageRating : 0,
+            numberOfReviews: reviewObj ? reviewObj.numberOfReviews : 0,
+        });
+    });
+    return results;
+    
 }
 
 async function getNewestCourses() {
@@ -189,7 +222,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         },
         {
             $addFields: {
-                rating: {
+                averageRating: {
                     $avg: "$review.rating",
                 },
             }
@@ -214,7 +247,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         const newObj = {
             ...(element.document), numberOfReviews: element.numberOfReviews
         }
-        if (!newObj.rating) newObj.rating = 0;
+        if (!newObj.averageRating) newObj.averageRating = 0;
         delete newObj.review;
         delete newObj.__v;
         return newObj;
