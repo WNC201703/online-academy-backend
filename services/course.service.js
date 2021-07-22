@@ -95,7 +95,7 @@ async function getPopularCourses() {
     ]);
 
     const courses = await Course.find({
-        _id:{
+        _id: {
             $in: enrollmentAggregate.map(item => item._id)
         }
     });
@@ -165,9 +165,50 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
-    const { courses, totalCount } = await courseModel.getCourses(pageNumber, pageSize, sortBy, keyword, categories);
-
-    const results = await getCoursesResponseData(courses);
+    let regex = new RegExp(keyword, 'i');
+    let obj = {};
+    if (keyword) obj['name'] = regex;
+    if (categories) obj['category'] = { '$in': categories.map(item => item._id) };
+    const totalCount = await Course.countDocuments(obj);
+    const courseAggregate = await Course.aggregate([
+        {
+            $match: obj
+        },
+        {
+            $lookup: { from: 'reviews', localField: '_id', foreignField: 'course', as: 'review' }
+        },
+        {
+            $addFields: {
+                rating: {
+                    $avg: "$review.rating",
+                },
+            }
+        },
+        {
+            $sort: sort
+        },
+        {
+            $limit: pageSize,
+        },
+        {
+            $skip: (pageNumber - 1) * pageSize
+        },
+        {
+            $project: {
+                document: '$$ROOT',
+                numberOfReviews: { $size: "$review" }
+            }
+        },
+    ]);
+    const courses = courseAggregate.map((element) => {
+        const newObj = {
+            ...(element.document), numberOfReviews: element.numberOfReviews
+        }
+        if (!newObj.rating) newObj.rating = 0;
+        delete newObj.review;
+        delete newObj.__v;
+        return newObj;
+    });
 
     const totalPages = totalCount === 0 ? 1 : (pageSize === 0) ? 1 : Math.ceil(totalCount / pageSize);
     return {
@@ -175,7 +216,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         "pageNumber": pageNumber ? pageNumber : 1,
         "totalPages": totalPages,
         "totalResults": totalCount,
-        "results": results
+        "results": courses
     };
 }
 
@@ -228,7 +269,7 @@ async function getEnrollmentsByStudentId(studentId) {
 }
 
 async function getPostedCourses(teacherId) {
-    const courses = await Course.find({teacher:teacherId});
+    const courses = await Course.find({ teacher: teacherId });
     return courses;
 }
 
