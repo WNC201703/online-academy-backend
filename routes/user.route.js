@@ -136,6 +136,14 @@ router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, re
 })
 );
 
+//get posted courses
+router.get('/:userId/posted-courses', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const enrollments = await courseService.getPostedCourses(userId);
+  return res.status(httpStatus.CREATED).json(enrollments);
+})
+);
+
 router.delete('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
   await userService.deleteUser(userId);

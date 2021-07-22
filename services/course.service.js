@@ -227,6 +227,12 @@ async function getEnrollmentsByStudentId(studentId) {
     return results;
 }
 
+async function getPostedCourses(teacherId) {
+    const courses = await Course.find({teacher:teacherId});
+    return courses;
+}
+
+
 async function addReview(courseId, userId, review, rating) {
     const enrollment = await enrollmentModel.get(courseId, userId);
     if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Enrollment Not found");
@@ -340,6 +346,7 @@ module.exports = {
     getTopViewedCourses,
     getRelatedCourses,
     getReviews,
+    getPostedCourses,
 
     updateCourse,
     enrollStudent,
