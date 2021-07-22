@@ -3,6 +3,7 @@ const categoryModel = require("../models/category.model");
 const reviewModel = require("../models/review.model");
 const enrollmentModel = require("../models/enrollment.model");
 const lessonModel = require("../models/lesson.model");
+const { Enrollment } = enrollmentModel;
 const { Review } = reviewModel;
 const { Course } = courseModel;
 const ApiError = require('../utils/ApiError');
@@ -87,31 +88,41 @@ async function getTopViewedCourses() {
 
 async function getRelatedCourses(courseId) {
     const course = await Course.findById(courseId);
-    const count = await Course.find({ category: course.category }).countDocuments();
-    const relatedId = [];
-    if (count <= 5) {
-        const relatedCourses = await Course.find({ category: course.category });
-        return relatedCourses;
-    }
-
-    while (relatedId.length < 5) {
-        const randomNumber = Math.floor(Math.random() * count);
-        const randomCourse = await Course.find({ category: course.category }).skip(randomNumber).select('_id').limit(1);
-        const randomCourseId = '' + randomCourse[0]._id;
-        if (!(relatedId.indexOf(randomCourseId) > -1)) {
-            relatedId.push(randomCourseId);
-        }
-    }
-    const relatedCourses = await Course.find(
+    if (!course) throw new ApiError(httpStatus.BAD_REQUEST,'Not found course');
+    const xxx=await Enrollment.find().populate('course','name');
+    const courseAggregate=await Course.aggregate([
         {
-            _id: {
-                $in:
-                    relatedId
+            $match:{
+                category:course.category,
+                _id:{
+                    $ne:course._id
+                }
+            },
+        },
+        {
+            $lookup: { from: 'enrollments', localField: '_id', foreignField: 'course', as: 'enrollment' }
+        },
+        {
+            $project:{
+                _id: 1,
+                enrollments:{$size:"$enrollment"}
+            }
+        },
+        {
+            $sort: { enrollments: - 1 }
+        },
+        {
+            $limit:5
+        }
+    ]);
+    const courses=await Course.find(
+        {
+            _id:{
+                $in:courseAggregate.map(course => course._id)
             }
         }
     );
-    const results = await getCoursesResponseData(relatedCourses);
-
+    const results = await getCoursesResponseData(courses);
     return results;
 }
 
@@ -209,11 +220,11 @@ async function getReviews(courseId, pageNumber, pageSize) {
         .limit(pageSize)
         .skip((pageNumber - 1) * pageSize)
         .select('-__v')
-        .populate('user','fullname');
+        .populate('user', 'fullname');
 
     reviews.forEach(element => {
-        element._doc.username=element._doc.user.fullname;
-        element._doc.user=element._doc.user._id;
+        element._doc.username = element._doc.user.fullname;
+        element._doc.user = element._doc.user._id;
     });
 
 
@@ -291,20 +302,23 @@ async function getCoursesResponseData(courses) {
 
 module.exports = {
     createCourse,
+
     getAll,
     getCourseById,
-    deleteCourse,
     getCourses,
-    updateCourse,
-    enrollStudent,
     getEnrollmentsByCourseId,
     getEnrollmentsByStudentId,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
     getRelatedCourses,
-    addReview,
     getReviews,
+
+    updateCourse,
+    enrollStudent,
+    addReview,
     uploadCourseImage,
+
+    deleteCourse,
 }
 
