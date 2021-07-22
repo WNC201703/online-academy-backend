@@ -46,7 +46,7 @@ async function getTopEnrrollmentCategoriesOfWeek() {
     const today = new Date();
     let sDay = new Date();
     sDay.setDate(today.getDate() - 7);
-    const group = await Enrollment
+    const enrollmentAggregate = await Enrollment
         .aggregate([
             {
                 $match: { createdAt: { $gte: sDay, $lte: today } }
@@ -55,8 +55,15 @@ async function getTopEnrrollmentCategoriesOfWeek() {
                 $lookup: { from: 'courses', localField: 'course', foreignField: '_id', as: 'courseObject' }
             },
             {
+                $project: {
+                    'category': {
+                        $arrayElemAt: ['$courseObject.category', 0]
+                    }
+                }
+            },
+            {
                 $group: {
-                    _id: '$courseObject.category',
+                    _id: '$category',
                     count: { $sum: 1 }
                 }
             },
@@ -64,31 +71,19 @@ async function getTopEnrrollmentCategoriesOfWeek() {
                 $sort: { count: - 1 }
             },
             {
-                $limit: 10
+                $limit: 1
             },
 
         ]);
-    //get data to response
-    let counts = {};
-    let tmp = [];
-    group.forEach(element => {
-        counts[element._id[0]] = element.count;
-        tmp.push(element._id[0]);
-    });
-    const categories = await Category.find({ _id: { "$in": tmp } }).select('-__v -parent');
-    let results = [];
-    for (let i = 0; i < categories.length; i++) {
-        const c = categories[i];
-        let obj = {
-            _id: c._id,
-            name: c.name,
-            enrollment: counts[c._id]
-        };
-        results.push(obj)
-        categories[i].count = counts[categories[i]._id];
-    }
-    results.sort(function (a, b) { return b.enrollment - a.enrollment });
-    return results;
+
+    if (enrollmentAggregate.length===0) return [];
+
+    const category =await Category.findById(enrollmentAggregate[0]._id).select('-__v -parent');
+   
+    return {
+        ...(category._doc),
+        enrollments:enrollmentAggregate[0].count
+    };
 }
 
 
