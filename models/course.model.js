@@ -90,11 +90,6 @@ async function getAll() {
     return courses;
 }
 
-async function getPopularCourses() {
-    // const courses = await Course.find().select('-__v')
-    // .populate('teacher','fullname').populate('category','name');
-    return courses;
-}
 
 async function getNewestCourses() {
     const courses = await Course.find().sort({
@@ -156,7 +151,6 @@ module.exports = {
     addNewCourse, deleteCourse, updateCourse,
     verifyTeacher ,
     getCourses,
-    getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,
     exists,
