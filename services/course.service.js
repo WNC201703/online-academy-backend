@@ -237,9 +237,15 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             $skip: (pageNumber - 1) * pageSize
         },
         {
+            $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'category' }
+        },
+        {
+            $lookup: { from: 'users', localField: 'teacher', foreignField: '_id', as: 'teacher' }
+        },
+        {
             $project: {
                 document: '$$ROOT',
-                numberOfReviews: { $size: "$review" }
+                numberOfReviews: { $size: "$review" },
             }
         },
     ]);
@@ -248,6 +254,8 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             ...(element.document), numberOfReviews: element.numberOfReviews
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
+        newObj.category=newObj.category[0]?.name;
+        newObj.teacher=newObj.teacher[0]?.fullname;
         delete newObj.review;
         delete newObj.__v;
         return newObj;
