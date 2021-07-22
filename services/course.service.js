@@ -98,7 +98,17 @@ async function getPopularCourses() {
         _id: {
             $in: enrollmentAggregate.map(item => item._id)
         }
+    })
+    .populate('teacher','fullname')
+    .populate('category','name');
+
+    //format
+    courses.forEach(element => {
+        let data = element._doc;
+        data.teacher = data.teacher.fullname;
+        data.category = element._doc.category.name;
     });
+
     return courses;
 }
 
