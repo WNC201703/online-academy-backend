@@ -104,7 +104,7 @@ async function getPopularCourses() {
         },
         {
             $project: {
-                _id:1,
+                _id: 1,
                 averageRating: 1,
                 numberOfReviews: { $size: "$review" },
             }
@@ -116,9 +116,9 @@ async function getPopularCourses() {
             $in: aggregate.map(item => item._id)
         }
     })
-    .select('-__v')
-    .populate('teacher','fullname')
-    .populate('category','name');
+        .select('-__v')
+        .populate('teacher', 'fullname')
+        .populate('category', 'name');
 
     let coursesReview = {};
     aggregate.forEach(element => {
@@ -130,30 +130,30 @@ async function getPopularCourses() {
 
     let results = [];
     courses.forEach(element => {
-        const id=element._id;
-        const reviewObj=coursesReview[id];
+        const id = element._id;
+        const reviewObj = coursesReview[id];
         let data = element._doc;
         data.teacher = data.teacher.fullname;
         data.category = data.category.name;
         results.push({
             ...data,
-            averageRating:reviewObj ? reviewObj.averageRating : 0,
+            averageRating: reviewObj ? reviewObj.averageRating : 0,
             numberOfReviews: reviewObj ? reviewObj.numberOfReviews : 0,
         });
     });
     return results;
-    
+
 }
 
 async function getNewestCourses() {
     const courses = await courseModel.getNewestCourses();
-    const results = await getCoursesResponseData(courses);
+    const results = await calcAvgRatingOfCourses(courses);
     return results;
 }
 
 async function getTopViewedCourses() {
     const courses = await courseModel.getTopViewedCourses();
-    const results = await getCoursesResponseData(courses);
+    const results = await calcAvgRatingOfCourses(courses);
     return results;
 }
 
@@ -192,7 +192,7 @@ async function getRelatedCourses(courseId) {
             }
         }
     );
-    const results = await getCoursesResponseData(courses);
+    const results = await calcAvgRatingOfCourses(courses);
     return results;
 }
 
@@ -373,7 +373,7 @@ async function verifyTeacher(courseId, teacherId) {
     if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
 
-async function getCoursesResponseData(courses) {
+async function calcAvgRatingOfCourses(courses) {
     const coursesReview = await Review.aggregate([
         {
             $match: {
