@@ -22,11 +22,6 @@ async function getCategoryById(categoryId) {
     return category;
 }
 async function getAll() {
-    // const findObj={};
-    // if (level){
-    //     if (+level===1) findObj['parent'] = null;
-    //     if (+level===2) findObj['parent'] = {$ne:null};
-    // }
     const categories = await Category.find().select('-__v').populate('parent', 'name');
     return categories;
 }

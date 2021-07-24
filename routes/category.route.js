@@ -18,7 +18,8 @@ router.post('/', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
 
 //get categories
 router.get('/', asyncHandler(async (req, res, next) => {
-    const categories = await categoryService.getCategories();
+    const {type}=req.query;
+    const categories = await categoryService.getCategories(type);
     return res.status(httpStatus.OK).json(categories);
 })
 );

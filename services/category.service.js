@@ -26,18 +26,33 @@ async function getCategoriesByparent(parent) {
     return categories;
 }
 
-async function getCategories(level) {
-    //get parent category
-    const categories = await categoryModel.getParentCategories();
-
-    const results = [];
-    await Promise.all(categories.map(async (category) => {
-        let data = { ...category._doc };
+async function getCategories(type) {
+    if (type === 'list') {
+        const categories = await categoryModel.getAll();
+        const results = [];
+        categories.forEach(element => {
+            let data = { ...element._doc };
+            if (element._doc.parent) {
+                data.parent = element._doc.parent._id;
+                data.parentName = element._doc.parent.name;
+            }
+            else {
+            }
+            results.push(data);
+        });
+        return results;
+    }
+    else {
+        const categories = await categoryModel.getParentCategories();
+        const results = [];
+        await Promise.all(categories.map(async (category) => {
+            let data = { ...category._doc };
             const children = await categoryModel.getSubCategoriesByParent(category._id);
             data['children'] = children;
             results.push(data);
-    }));
-    return results;
+        }));
+        return results;
+    }
 }
 
 async function getTopEnrrollmentCategoriesOfWeek() {
@@ -102,7 +117,7 @@ async function deleteCategory(categoryId) {
         }
     ]);
     if (courses.length !== 0) throw new ApiError(httpStatus.BAD_REQUEST, "Category exists courses");
-    const result = await categoryModel.deleteCategory([...categories,categoryId]);
+    const result = await categoryModel.deleteCategory([...categories, categoryId]);
     const exists = await categoryModel.exists(categoryId);
     if (exists) throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
     return exists;
