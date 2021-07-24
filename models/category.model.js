@@ -3,8 +3,8 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const categorySchema = mongoose.Schema(
     {
-        parent: 
-            { type: ObjectId, ref: 'Category'},
+        parent:
+            { type: ObjectId, ref: 'Category' },
         name: {
             type: String,
             trim: true,
@@ -18,26 +18,32 @@ const Category = mongoose.model('Category', categorySchema);
 
 
 async function getCategoryById(categoryId) {
-    const category = await Category.findById(categoryId).select('-__v').populate('parent','name');;
+    const category = await Category.findById(categoryId).select('-__v').populate('parent', 'name');;
     return category;
 }
-async function getAll(level) {
-    const findObj={};
-    if (level){
-        if (+level===1) findObj['parent'] = null;
-        if (+level===2) findObj['parent'] = {$ne:null};
-    }
-    const categories = await Category.find(findObj).select('-__v').populate('parent','name');
+async function getAll() {
+    // const findObj={};
+    // if (level){
+    //     if (+level===1) findObj['parent'] = null;
+    //     if (+level===2) findObj['parent'] = {$ne:null};
+    // }
+    const categories = await Category.find().select('-__v').populate('parent', 'name');
     return categories;
 }
 
 async function getParentCategories() {
-    const categories = await Category.find({parent:{ $exists: true, $ne: null } }).select('-__v')
+    const categories = await Category.find({ parent: null }).select('-__v -parent')
     return categories;
 }
+
+async function getSubCategoriesByParent(parentId) {
+    const categories = await Category.find({ parent: parentId }).select('-__v -parent')
+    return categories;
+}
+
 async function updateCategory(categoryId, newData) {
     const category = await Category.findByIdAndUpdate(categoryId, newData);
-    const updatedCategory=await Category.findById(categoryId ,{ __v: 0});
+    const updatedCategory = await Category.findById(categoryId, { __v: 0 });
     return updatedCategory;
 }
 
@@ -50,15 +56,17 @@ async function addNewCategory(parent, name) {
     return newCategory;
 }
 
-async function exists(categoryId){
+async function exists(categoryId) {
     const category = await Category.findById(categoryId);
     return !!category;
 }
 
 async function deleteCategory(categories) {
-    const result = await Category.deleteMany({_id: {
-        $in:categories.map(category => category._id)
-    }});
+    const result = await Category.deleteMany({
+        _id: {
+            $in: categories.map(category => category._id)
+        }
+    });
     return result;
 }
 
@@ -67,7 +75,7 @@ async function getCategoriesByparent(parent) {
     return categories;
 }
 
-async function getChildren(categoryId){
+async function getCategoryAndChildren(categoryId) {
     if (!categoryId) return null;
     const parent = await Category.aggregate([
         {
@@ -88,7 +96,8 @@ async function getChildren(categoryId){
             }
         }
     ]);
-    const categories=[parent[0],...parent[0].children];
+
+    let categories= [parent[0], ...parent[0].children];
     return categories;
 }
 
@@ -96,11 +105,12 @@ module.exports = {
     Category,
     getCategoryById,
     getAll,
-    addNewCategory, 
-    deleteCategory, 
+    addNewCategory,
+    deleteCategory,
     updateCategory,
     getCategoriesByparent,
     getParentCategories,
-    getChildren,
+    getCategoryAndChildren ,
+    getSubCategoriesByParent ,
     exists,
 };

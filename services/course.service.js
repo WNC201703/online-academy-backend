@@ -193,7 +193,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     if (!pageNumber) pageNumber = 1;
     if (!pageSize || pageSize<1) pageSize = 10;
     let sort = {};
-    const categories = await categoryModel.getChildren(categoryId);
+    const categories = await categoryModel.getCategoryAndChildren(categoryId);
     if (sortBy) {
         const arr = sortBy.split(',');
         arr.forEach(item => {

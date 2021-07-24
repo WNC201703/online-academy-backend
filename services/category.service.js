@@ -27,18 +27,16 @@ async function getCategoriesByparent(parent) {
 }
 
 async function getCategories(level) {
-    const categories = await categoryModel.getAll(level);
+    //get parent category
+    const categories = await categoryModel.getParentCategories();
+
     const results = [];
-    categories.forEach(element => {
-        let data = { ...element._doc };
-        if (element._doc.parent) {
-            data.parent = element._doc.parent._id;
-            data.parentName = element._doc.parent.name;
-        }
-        else {
-        }
-        results.push(data);
-    });
+    await Promise.all(categories.map(async (category) => {
+        let data = { ...category._doc };
+            const children = await categoryModel.getSubCategoriesByParent(category._id);
+            data['children'] = children;
+            results.push(data);
+    }));
     return results;
 }
 
@@ -76,13 +74,13 @@ async function getTopEnrrollmentCategoriesOfWeek() {
 
         ]);
 
-    if (enrollmentAggregate.length===0) return [];
+    if (enrollmentAggregate.length === 0) return [];
 
-    const category =await Category.findById(enrollmentAggregate[0]._id).select('-__v -parent');
-   
+    const category = await Category.findById(enrollmentAggregate[0]._id).select('-__v -parent');
+
     return {
         ...(category._doc),
-        enrollments:enrollmentAggregate[0].count
+        enrollments: enrollmentAggregate[0].count
     };
 }
 
@@ -93,7 +91,7 @@ async function updateCategory(categoryId, body) {
 }
 
 async function deleteCategory(categoryId) {
-    const categories = await categoryModel.getChildren(categoryId);
+    const categories = await categoryModel.getCategoryAndChildren(categoryId);
     const courses = await Course.aggregate([
         {
             $match: {
@@ -104,7 +102,7 @@ async function deleteCategory(categoryId) {
         }
     ]);
     if (courses.length !== 0) throw new ApiError(httpStatus.BAD_REQUEST, "Category exists courses");
-    const result = await categoryModel.deleteCategory(categories);
+    const result = await categoryModel.deleteCategory([...categories,categoryId]);
     const exists = await categoryModel.exists(categoryId);
     if (exists) throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
     return exists;

@@ -18,12 +18,7 @@ router.post('/', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
 
 //get categories
 router.get('/', asyncHandler(async (req, res, next) => {
-    const {parent,level} = req.query;
-    if (!!parent) {
-        const categories = await categoryService.getCategoriesByparent(parent);
-        return res.status(httpStatus.OK).json(categories);
-    }
-    const categories = await categoryService.getCategories(level);
+    const categories = await categoryService.getCategories();
     return res.status(httpStatus.OK).json(categories);
 })
 );
