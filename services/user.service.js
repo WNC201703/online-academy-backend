@@ -217,20 +217,7 @@ async function updateEmail(userId, currentPassword, newEmail) {
 
 async function getFavoriteCourses(userId) {
   const favorites = await favoriteModel.getByUserId(userId);
-  
-
-  const agg=await courseService.getCoursesByIdList(favorites.map(item => item.course));
-  console.log(agg);
-
-
-  const results = [];
-  favorites.forEach(element => {
-    let data = { ...element._doc };
-    data.course = element._doc.course._id;
-    data['courseName'] = element._doc.course.name;
-    results.push(data);
-  });
-
+  const results=await courseService.getCoursesByIdList(favorites.map(item => item.course));
   return results;
 }
 async function favoriteCourse(userId, courseId) {

@@ -374,6 +374,7 @@ async function verifyTeacher(courseId, teacherId) {
     if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
 
+//get and format 
 async function getCoursesByIdList(idList){
     const courseAggregate = await Course.aggregate([
         {
