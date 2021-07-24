@@ -86,7 +86,7 @@ const sendVerificationEmail = async (email) => {
 
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST, 'We were unable to find a user with that email. Make sure your Email is correct!');
 
-  if (user.active) throw new ApiError(httpStatus.OK, 'This account has been already verified. Please log in.');
+  if (user.active) throw new ApiError(httpStatus.BAD_REQUEST, 'This account has been already verified. Please log in.');
   else {
     const verificationToken = require('crypto').randomBytes(48).toString('hex');
 
@@ -157,10 +157,12 @@ async function login(body) {
   const { email, password } = body;
   const user = await userModel.getUserByEmail(email);
   if (!!user) {
-    if (!user.active) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
 
     const success = await user.validatePassword(password);
     if (!success) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
+
+    if (!user.active) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
+
     const accessToken = generateAccessToken(user.email, user._id, user.role);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
