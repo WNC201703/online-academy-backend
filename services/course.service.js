@@ -228,10 +228,10 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             $sort: sort
         },
         {
-            $limit: pageSize,
+            $skip: (pageNumber - 1) * pageSize
         },
         {
-            $skip: (pageNumber - 1) * pageSize
+            $limit: pageSize,
         },
         {
             $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'category' }
@@ -246,6 +246,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             }
         },
     ]);
+
     const courses = courseAggregate.map((element) => {
         const newObj = {
             ...(element.document), numberOfReviews: element.numberOfReviews
