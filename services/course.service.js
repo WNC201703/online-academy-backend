@@ -55,8 +55,8 @@ async function getCourseById(courseId) {
     data.category = course._doc.category.name;
     return {
         ...data,
-        averageRating: courseReview[0] ? courseReview[0].avgRating : 0,
-        numberOfReviews: courseReview[0] ? courseReview[0].numberOfReviews : 0,
+        averageRating: courseReview[0] ? courseReview[0].avgRating.toFixed(2) : 0,
+        numberOfReviews: courseReview[0] ? courseReview[0].numberOfReviews.toFixed(2) : 0,
         enrollments: count
     };
 }
@@ -123,7 +123,7 @@ async function getPopularCourses() {
     let coursesReview = {};
     aggregate.forEach(element => {
         coursesReview[element._id] = {
-            averageRating: element.averageRating,
+            averageRating: element.averageRating.toFixed(2),
             numberOfReviews: element.numberOfReviews
         };
     });
@@ -137,7 +137,7 @@ async function getPopularCourses() {
         data.category = data.category.name;
         results.push({
             ...data,
-            averageRating: reviewObj ? reviewObj.averageRating : 0,
+            averageRating: reviewObj ? reviewObj.averageRating.toFixed(2) : 0,
             numberOfReviews: reviewObj ? reviewObj.numberOfReviews : 0,
         });
     });
@@ -251,9 +251,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             ...(element.document), numberOfReviews: element.numberOfReviews
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
-        else {
-            // new
-        }
+        else newObj.averageRating=newObj.averageRating.toFixed(2);
         newObj.category = newObj.category[0]?.name;
         newObj.teacher = newObj.teacher[0]?.fullname;
         delete newObj.review;
@@ -323,6 +321,7 @@ async function addReview(courseId, userId, review, rating) {
     const exists = await reviewModel.exists(enrollment._id);
     if (exists) throw new ApiError(httpStatus.BAD_REQUEST, "Rated");
     const result = await reviewModel.add(enrollment._id, courseId, userId, review, rating);
+    delete result.enrollment;
     return result;
 }
 
@@ -336,7 +335,7 @@ async function getReviews(courseId, pageNumber, pageSize) {
         .sort({ createdAt: -1 })
         .limit(pageSize)
         .skip((pageNumber - 1) * pageSize)
-        .select('-__v')
+        .select('-__v -enrollment')
         .populate('user', 'fullname');
 
     reviews.forEach(element => {
@@ -418,6 +417,7 @@ async function getCoursesByIdList(idList) {
             numberOfReviews: element.numberOfReviews
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
+        else newObj.averageRating=newObj.averageRating.toFixed(2);
         newObj.category = newObj.category[0]?.name;
         newObj.teacher = newObj.teacher[0]?.fullname;
         delete newObj.review;
