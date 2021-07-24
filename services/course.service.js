@@ -198,6 +198,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         const arr = sortBy.split(',');
         arr.forEach(item => {
             const spl = item.split('.');
+            if (spl[0]==='rating') spl[0]='averageRating';
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
