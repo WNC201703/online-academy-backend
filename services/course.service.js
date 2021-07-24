@@ -147,13 +147,13 @@ async function getPopularCourses() {
 
 async function getNewestCourses() {
     const courses = await courseModel.getNewestCourses();
-    const results = await calcAvgRatingOfCourses(courses);
+    const results = await getCoursesByIdList(courses.map(item => item._id));
     return results;
 }
 
 async function getTopViewedCourses() {
     const courses = await courseModel.getTopViewedCourses();
-    const results = await calcAvgRatingOfCourses(courses);
+    const results = await getCoursesByIdList(courses.map(item => item._id));
     return results;
 }
 
@@ -185,14 +185,7 @@ async function getRelatedCourses(courseId) {
             $limit: 5
         }
     ]);
-    const courses = await Course.find(
-        {
-            _id: {
-                $in: courseAggregate.map(course => course._id)
-            }
-        }
-    );
-    const results = await calcAvgRatingOfCourses(courses);
+    const results = await getCoursesByIdList(courseAggregate.map(course => course._id));
     return results;
 }
 
@@ -381,48 +374,57 @@ async function verifyTeacher(courseId, teacherId) {
     if (!verified) throw new ApiError(httpStatus.FORBIDDEN, "Access is denied");
 }
 
-async function calcAvgRatingOfCourses(courses) {
-    const coursesReview = await Review.aggregate([
+async function getCoursesByIdList(idList){
+    const courseAggregate = await Course.aggregate([
         {
             $match: {
-                course: {
-                    $in: courses.map(course => course._id)
-                }
+              _id:{
+                $in: idList
+              }
             }
         },
         {
-            $group: {
-                _id: '$course',
-                avgRating: {
-                    $avg: '$rating',
+            $lookup: { from: 'reviews', localField: '_id', foreignField: 'course', as: 'review' }
+        },
+        {
+            $addFields: {
+                averageRating: {
+                    $avg: "$review.rating",
                 },
-                numberOfReviews: {
-                    $sum: 1
-                }
             }
-        }
-    ]);
+        },
+        {
+            $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'category' }
+        },
+        {
+            $lookup: { from: 'users', localField: 'teacher', foreignField: '_id', as: 'teacher' }
+        },
+        {
+            $sort:{
+                createdAt:1
+            }
+        },
+        {
+          $project: {
+              document: '$$ROOT',
+              numberOfReviews: { $size: "$review" },
+          }
+      },
+      ]);
 
-    let coursesReviewObj = {};
-    coursesReview.forEach(element => {
-        coursesReviewObj[element._id] = {
-            avgRating: element.avgRating,
+      const courses = courseAggregate.map((element) => {
+        const newObj = {
+            ...(element.document), 
             numberOfReviews: element.numberOfReviews
-        };
+        }
+        if (!newObj.averageRating) newObj.averageRating = 0;
+        newObj.category=newObj.category[0]?.name;
+        newObj.teacher=newObj.teacher[0]?.fullname;
+        delete newObj.review;
+        delete newObj.__v;
+        return newObj;
     });
-
-    let results = [];
-    courses.forEach(element => {
-        let data = element._doc;
-        data.teacher = element._doc.teacher.fullname;
-        data.category = element._doc.category.name;
-        results.push({
-            ...data,
-            averageRating: coursesReviewObj[element._id] ? coursesReviewObj[element._id].avgRating : 0,
-            numberOfReviews: coursesReviewObj[element._id] ? coursesReviewObj[element._id].numberOfReviews : 0,
-        });
-    });
-    return results;
+    return courses
 }
 
 module.exports = {
@@ -439,6 +441,7 @@ module.exports = {
     getRelatedCourses,
     getReviews,
     getPostedCourses,
+    getCoursesByIdList,
 
     updateCourse,
     enrollStudent,

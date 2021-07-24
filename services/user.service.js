@@ -217,6 +217,12 @@ async function updateEmail(userId, currentPassword, newEmail) {
 
 async function getFavoriteCourses(userId) {
   const favorites = await favoriteModel.getByUserId(userId);
+  
+
+  const agg=await courseService.getCoursesByIdList(favorites.map(item => item.course));
+  console.log(agg);
+
+
   const results = [];
   favorites.forEach(element => {
     let data = { ...element._doc };

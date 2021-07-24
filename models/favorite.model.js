@@ -32,8 +32,7 @@ async function exists(userId, courseId) {
 }
 
 async function getByUserId(userId) {
-    const favorites = await Favorite.find({ user: userId }).select('-__v')
-        .populate('course', 'name ');
+    const favorites = await Favorite.find({ user: userId }).select('-__v');
     return favorites;
 }
 
