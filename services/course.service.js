@@ -191,17 +191,20 @@ async function getRelatedCourses(courseId) {
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     if (!pageNumber) pageNumber = 1;
-    if (pageSize !== 0 && !pageSize) pageSize = 10;
+    if (!pageSize || pageSize<1) pageSize = 10;
     let sort = {};
     const categories = await categoryModel.getChildren(categoryId);
     if (sortBy) {
         const arr = sortBy.split(',');
         arr.forEach(item => {
             const spl = item.split('.');
-            if (spl[0]==='rating') spl[0]='averageRating';
+            if (spl[0] === 'rating') {
+                spl[0] = 'averageRating';
+            }
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
+    if (!Object.keys(sort).length) sort = {_id:1};
     let regex = new RegExp(keyword, 'i');
     let obj = {};
     if (keyword) obj['name'] = regex;
@@ -248,8 +251,11 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             ...(element.document), numberOfReviews: element.numberOfReviews
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
-        newObj.category=newObj.category[0]?.name;
-        newObj.teacher=newObj.teacher[0]?.fullname;
+        else {
+            // new
+        }
+        newObj.category = newObj.category[0]?.name;
+        newObj.teacher = newObj.teacher[0]?.fullname;
         delete newObj.review;
         delete newObj.__v;
         return newObj;
@@ -368,13 +374,13 @@ async function verifyTeacher(courseId, teacherId) {
 }
 
 //get and format 
-async function getCoursesByIdList(idList){
+async function getCoursesByIdList(idList) {
     const courseAggregate = await Course.aggregate([
         {
             $match: {
-              _id:{
-                $in: idList
-              }
+                _id: {
+                    $in: idList
+                }
             }
         },
         {
@@ -394,26 +400,26 @@ async function getCoursesByIdList(idList){
             $lookup: { from: 'users', localField: 'teacher', foreignField: '_id', as: 'teacher' }
         },
         {
-            $sort:{
-                createdAt:1
+            $sort: {
+                createdAt: 1
             }
         },
         {
-          $project: {
-              document: '$$ROOT',
-              numberOfReviews: { $size: "$review" },
-          }
-      },
-      ]);
+            $project: {
+                document: '$$ROOT',
+                numberOfReviews: { $size: "$review" },
+            }
+        },
+    ]);
 
-      const courses = courseAggregate.map((element) => {
+    const courses = courseAggregate.map((element) => {
         const newObj = {
-            ...(element.document), 
+            ...(element.document),
             numberOfReviews: element.numberOfReviews
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
-        newObj.category=newObj.category[0]?.name;
-        newObj.teacher=newObj.teacher[0]?.fullname;
+        newObj.category = newObj.category[0]?.name;
+        newObj.teacher = newObj.teacher[0]?.fullname;
         delete newObj.review;
         delete newObj.__v;
         return newObj;
