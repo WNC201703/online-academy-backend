@@ -132,7 +132,7 @@ router.put('/:userId/email', auth(), asyncHandler(async (req, res, next) => {
 router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const enrollments = await courseService.getEnrollmentsByStudentId(userId);
-  return res.status(httpStatus.CREATED).json(enrollments);
+  return res.status(httpStatus.OK).json(enrollments);
 })
 );
 
