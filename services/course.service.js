@@ -298,17 +298,9 @@ async function getEnrollmentsByCourseId(courseId, teacherId) {
 }
 
 async function getEnrollmentsByStudentId(studentId) {
-    const erollments = await enrollmentModel.getByStudentId(studentId);
-    const results = [];
-    erollments.forEach(element => {
-        if (element) {
-            let data = { ...element._doc };
-            data.course = element._doc.course._id;
-            data['courseName'] = element._doc.course.name;
-            results.push(data);
-        }
-    });
-
+    const enrollments = await enrollmentModel.getByStudentId(studentId);
+    console.log(enrollments);
+    const results = await getCoursesByIdList(enrollments.map(item => item.course));
     return results;
 }
 
