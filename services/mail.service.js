@@ -14,7 +14,7 @@ const sendTokenToCreateAccount = (verificationToken, email) => {
     from: 'onlineacademy208@gmail.com',
     to: email,
     subject: 'Thư gửi tự động để xác nhận email',
-    html: `<p>Vui lòng nhấn vào <a href="${process.env.API_URL}/api/users/email/verify/${verificationToken}">link</a> sau để xác nhận email</p>`,
+    html: `<p>Vui lòng nhấn vào <a href="${process.env.API_URL}/confirm-email/${verificationToken}">link</a> sau để xác nhận email</p>`,
   };
   transporter.sendMail(mailOptions, (err, data) => {
     if (err) {
