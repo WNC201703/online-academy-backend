@@ -137,8 +137,13 @@ const verifyUserEmail = async (token) => {
       user.active = true;
       await user.save();
     }
-    return true;
 
+    const accessToken = generateAccessToken(user.email, user._id, user.role);
+    const resUser = await User.findById(user._id).select('_id fullname email role');
+    return {
+      user: resUser,
+      accessToken: accessToken
+    };
   }
 
   if (vrToken.type===VERIFY_TOKEN_TYPE.CHANGE_EMAIL){

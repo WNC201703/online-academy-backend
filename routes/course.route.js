@@ -14,7 +14,7 @@ router.post('/', auth([ROLE.TEACHER]), upload.single("image"), asyncHandler(asyn
     console.log('post');
     const decoded = tokenService.getPayloadFromRequest(req);
     const teacherId = decoded.userId;
-    console.log(req);
+    console.log(req.file);
     const image = req.file;
     const data = req.body;
     const course = await courseService.createCourse(teacherId, data, image);

@@ -87,15 +87,16 @@ router.post('/email/verify/send', asyncHandler(async (req, res, next) => {
 }));
 
 router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
-  const isSuccessful = await userService.verifyUserEmail(req.params.token);
-  if (isSuccessful) {
+  const user = await userService.verifyUserEmail(req.params.token);
+  if (user) {
     return res.status(httpStatus.OK).json({
-      message:'Your account has been successfully verified'
+      message:'Your account has been successfully verified',
+      ...user
     });
   }
   else {
     return res.status(httpStatus.BAD_REQUEST).json({
-     message:'Your verification link may have expired. Please click on resend for verify your Email#2'
+     error_message:'Your verification link may have expired. Please click on resend for verify your Email#2'
     });
   }
 }));
@@ -109,7 +110,7 @@ router.get('/new-email/verify/:token', asyncHandler(async (req, res, next) => {
   }
   else {
     return res.status(httpStatus.BAD_REQUEST).json({
-      message:'Your verification link may have expired. Please click on resend for verify your Email#2'
+      error_message:'Your verification link may have expired. Please click on resend for verify your Email#2'
     });
   }
 }));
