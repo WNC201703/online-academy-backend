@@ -199,6 +199,24 @@ async function updateUserInfoByAdmin(userId, body) {
   return user;
 }
 
+async function updateUserInfo(userId,body){
+  let user = await User.findById(userId);
+  if (!user) throw new ApiError(httpStatus.BAD_REQUEST,'Not found user');
+  console.log(user);
+  const validPassword = await user.validatePassword(body.currentPassword);
+  console.log(validPassword);
+  if (!validPassword) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
+  if (body.fullname) user.fullname = body.fullname;
+  if (body.email) user.email = body.email;
+  if (body.password) user.password = body.password;
+
+  await user.save();
+
+  user = await userModel.getUserById(userId);
+
+  return user;
+}
+
 async function resetPassword(userId, currentPassword, newPassword) {
   if (!currentPassword || !newPassword) throw new ApiError(httpStatus.BAD_REQUEST, "Required currentPassword, newPassword");
   const user = await User.findById(userId);
@@ -284,6 +302,7 @@ module.exports = {
   updateUserInfoByAdmin,
   resetPassword,
   updateEmail,
+  updateUserInfo,
   createTeacher,
   deleteUser,
 

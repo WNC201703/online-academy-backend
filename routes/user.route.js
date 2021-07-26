@@ -6,13 +6,13 @@ const userService = require('../services/user.service');
 const tokenService = require('../services/token.service');
 const courseService = require('../services/course.service');
 const auth = require('../middlewares/auth.mdw');
-const { ROLE,VERIFY_TOKEN_TYPE } = require('../utils/constants');
+const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const ApiError = require('../utils/ApiError');
 
 //create a student
 router.post('/', asyncHandler(async (req, res, next) => {
   await userService.signUp(req.body);
-  return res.status(httpStatus.CREATED).json({ success: true,message:'A verification email has been sent to email' });
+  return res.status(httpStatus.CREATED).json({ success: true, message: 'A verification email has been sent to email' });
 })
 );
 
@@ -48,17 +48,20 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
   const role = tokenService.getPayloadFromRequest(req).role;
   if (role === ROLE.ADMIN) {
-    const {userId}= req.params;
+    const { userId } = req.params;
     const user = await userService.updateUserInfoByAdmin(userId, req.body);
     return res.status(httpStatus.OK).json({ user });
   }
   else {
-    //........
-    //........
-    //........
-    //........
-    //........
-    //........
+    const userId = userService.parseUserId(req, false);
+    const { currentPassword } = req.body;
+    if (!currentPassword)
+      return res.status(httpStatus.BAD_REQUEST).json({
+        error_message: 'currentPassword required'
+      });
+
+    const user = await userService.updateUserInfo(userId, req.body);
+    return res.status(httpStatus.OK).json({ user });
   }
 }));
 
@@ -91,13 +94,13 @@ router.get('/email/verify/:token', asyncHandler(async (req, res, next) => {
   const user = await userService.verifyUserEmail(req.params.token);
   if (user) {
     return res.status(httpStatus.OK).json({
-      message:'Your account has been successfully verified',
+      message: 'Your account has been successfully verified',
       ...user
     });
   }
   else {
     return res.status(httpStatus.BAD_REQUEST).json({
-     error_message:'Your verification link may have expired. Please click on resend for verify your Email#2'
+      error_message: 'Your verification link may have expired. Please click on resend for verify your Email#2'
     });
   }
 }));
@@ -106,12 +109,12 @@ router.get('/new-email/verify/:token', asyncHandler(async (req, res, next) => {
   const isSuccessful = await userService.verifyUserEmail(req.params.token);
   if (isSuccessful) {
     return res.status(httpStatus.OK).json({
-      message:'Your new email has been successfully verified, please login with new email'
+      message: 'Your new email has been successfully verified, please login with new email'
     });
   }
   else {
     return res.status(httpStatus.BAD_REQUEST).json({
-      error_message:'Your verification link may have expired. Please click on resend for verify your Email#2'
+      error_message: 'Your verification link may have expired. Please click on resend for verify your Email#2'
     });
   }
 }));
@@ -124,10 +127,10 @@ router.put('/:userId/password/reset', auth(), asyncHandler(async (req, res, next
 }));
 
 router.put('/:userId/email', auth(), asyncHandler(async (req, res, next) => {
-  const { currentPassword,newEmail} = req.body;
+  const { currentPassword, newEmail } = req.body;
   const userId = userService.parseUserId(req, false);
   await userService.updateEmail(userId, currentPassword, newEmail);
-  return res.status(httpStatus.OK).json({message: 'A verification email has been sent to new email'});
+  return res.status(httpStatus.OK).json({ message: 'A verification email has been sent to new email' });
 }));
 
 //get enrollments
@@ -153,14 +156,14 @@ router.delete('/:userId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, next
 })
 );
 
-router.get('/:userId/favorites', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
+router.get('/:userId/favorites', auth([ROLE.STUDENT, ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const results = await userService.getFavoriteCourses(userId);
   return res.status(httpStatus.OK).json(results);
 })
 );
 
-router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
+router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT, ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.favoriteCourse(userId, courseId);
@@ -168,7 +171,7 @@ router.put('/:userId/favorites/:courseId', auth([ROLE.STUDENT,ROLE.TEACHER]), as
 })
 );
 
-router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT,ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
+router.delete('/:userId/favorites/:courseId', auth([ROLE.STUDENT, ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const result = await userService.unFavoriteCourse(userId, courseId);
@@ -187,7 +190,7 @@ router.get('/:userId/favorites', auth([ROLE.STUDENT]), asyncHandler(async (req, 
 router.get('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
-  const results=await userService.getCompletedLessons(userId, courseId);
+  const results = await userService.getCompletedLessons(userId, courseId);
   return res.status(httpStatus.OK).json(results);
 })
 );
@@ -197,7 +200,7 @@ router.post('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]),
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const lessonId = req.body.lessonId;
-  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST,'lessonId is required');
+  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST, 'lessonId is required');
   await userService.completedLesson(userId, courseId, lessonId);
   return res.status(httpStatus.CREATED).json();
 })
@@ -207,8 +210,8 @@ router.delete('/:userId/courses/:courseId/completed-lesson', auth([ROLE.STUDENT]
   const userId = userService.parseUserId(req, false);
   const courseId = req.params.courseId;
   const lessonId = req.body.lessonId;
-  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST,'lessonId is required');
-  await userService.deleteCompletedLesson(userId, courseId,lessonId);
+  if (!lessonId) throw new ApiError(httpStatus.BAD_REQUEST, 'lessonId is required');
+  await userService.deleteCompletedLesson(userId, courseId, lessonId);
   return res.status(httpStatus.NO_CONTENT).json();
 })
 );
