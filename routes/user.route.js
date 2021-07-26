@@ -48,6 +48,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
   const role = tokenService.getPayloadFromRequest(req).role;
   if (role === ROLE.ADMIN) {
+    const {userId}= req.params;
     const user = await userService.updateUserInfoByAdmin(userId, req.body);
     return res.status(httpStatus.OK).json({ user });
   }
