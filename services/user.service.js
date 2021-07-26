@@ -132,7 +132,7 @@ const verifyUserEmail = async (token) => {
     const user = await User.findOne({ _id: vrToken.user });
     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification. Please SignUp!');
 
-    if (user.active) throw new ApiError(httpStatus.OK, 'User has been already verified. Please Login');
+    if (user.active) throw new ApiError(httpStatus.BAD_REQUEST, 'User has been already verified. Please Login');
     else {
       user.active = true;
       await user.save();
