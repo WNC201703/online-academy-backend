@@ -56,7 +56,7 @@ router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
     const userId = userService.parseUserId(req, false);
     const { currentPassword } = req.body;
     if (!currentPassword)
-      return res.status(httpStatus.BAD_REQUEST).json({
+      return res.status(httpStatus.UNAUTHORIZED).json({
         error_message: 'currentPassword required'
       });
 

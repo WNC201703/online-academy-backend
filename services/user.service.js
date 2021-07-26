@@ -202,7 +202,6 @@ async function updateUserInfoByAdmin(userId, body) {
 async function updateUserInfo(userId,body){
   let user = await User.findById(userId);
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST,'Not found user');
-  console.log(user);
   const validPassword = await user.validatePassword(body.currentPassword);
   console.log(validPassword);
   if (!validPassword) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
