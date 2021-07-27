@@ -305,9 +305,13 @@ async function getEnrollmentsByCourseId(courseId, teacherId) {
 
 async function getEnrollmentsByStudentId(studentId) {
     const enrollments = await enrollmentModel.getByStudentId(studentId);
-    console.log(enrollments);
     const results = await getCoursesByIdList(enrollments.map(item => item.course));
     return results;
+}
+
+async function getEnrollmentByStudentIdAndCourseId(studentId,courseId) {
+    const enrollment = await enrollmentModel.get(courseId,studentId);
+    return enrollment;
 }
 
 async function getPostedCourses(teacherId) {
@@ -436,6 +440,7 @@ module.exports = {
     getCourses,
     getEnrollmentsByCourseId,
     getEnrollmentsByStudentId,
+    getEnrollmentByStudentIdAndCourseId,
     getPopularCourses,
     getNewestCourses,
     getTopViewedCourses,

@@ -141,6 +141,15 @@ router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, re
 })
 );
 
+//get enrollment by courseId
+router.get('/:userId/courses/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+  const userId = userService.parseUserId(req, false);
+  const {courseId}= req.params;
+  const enrollments = await courseService.getEnrollmentByStudentIdAndCourseId(userId,courseId);
+  return res.status(httpStatus.OK).json(enrollments);
+})
+);
+
 //get posted courses
 router.get('/:userId/posted-courses', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);

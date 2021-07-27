@@ -27,7 +27,7 @@ async function exists(courseId, studentId) {
 }
 
 async function get(courseId, studentId) {
-    const enrollment = await Enrollment.findOne({ student: studentId, course: courseId });
+    const enrollment = await Enrollment.findOne({ student: studentId, course: courseId }).select('-__v');
     return enrollment;
 }
 
