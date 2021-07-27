@@ -271,7 +271,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 }
 
 async function updateCourse(courseId, teacherId, body) {
-    const { imageUrl, view, ...newData } = body;
+    const { imageUrl, view, _id ,createdAt, updatedAt , ...newData } = body;
     await verifyTeacher(courseId, teacherId);
     const course = await courseModel.updateCourse(courseId, newData);
     return course;

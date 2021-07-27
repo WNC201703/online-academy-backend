@@ -15,6 +15,10 @@ const courseSchema = mongoose.Schema(
             trim: true,
             default:""
         },
+        upload_complete:{
+            type: Boolean,
+            default:false
+        },
         category:
             { type: ObjectId, ref: 'Category', required: true },
         shortDescription: {
