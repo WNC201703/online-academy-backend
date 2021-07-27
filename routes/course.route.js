@@ -7,7 +7,7 @@ const lessonService = require('../services/lesson.service');
 const tokenService = require('../services/token.service')
 const upload = require("../utils/upload");
 const auth = require('../middlewares/auth.mdw');
-const {ROLE} = require('../utils/constants')
+const { ROLE } = require('../utils/constants')
 
 //create a course
 router.post('/', auth([ROLE.TEACHER]), upload.single("image"), asyncHandler(async (req, res, next) => {
@@ -81,7 +81,7 @@ router.delete('/:courseId', auth([ROLE.ADMIN]), asyncHandler(async (req, res, ne
 
 router.get('/:courseId/enrollments', auth([ROLE.TEACHER]), asyncHandler(async (req, res, next) => {
     const teacherId = tokenService.getPayloadFromRequest(req).userId;
-    const {courseId}=req.params;
+    const { courseId } = req.params;
     const enrollments = await courseService.getEnrollmentsByCourseId(courseId, teacherId);
     return res.status(httpStatus.CREATED).json(enrollments);
 })
@@ -94,10 +94,10 @@ router.post('/:courseId/enrollments', auth([ROLE.STUDENT]), asyncHandler(async (
 })
 );
 
-router.get('/:courseId/reviews',  asyncHandler(async (req, res, next) => {
+router.get('/:courseId/reviews', asyncHandler(async (req, res, next) => {
     const courseId = req.params.courseId;
     const { page_number, page_size } = req.query;
-    const result = await courseService.getReviews(courseId,+page_number,+page_size);
+    const result = await courseService.getReviews(courseId, +page_number, +page_size);
     return res.status(httpStatus.OK).json(result);
 })
 );
@@ -133,16 +133,29 @@ router.post('/:courseId/lessons', auth([ROLE.TEACHER]), upload.single("video"), 
 );
 
 //get course lessons 
-router.get('/:courseId/lessons', auth([ROLE.STUDENT]),asyncHandler(async (req, res, next) => {
+router.get('/:courseId/lessons', auth([ROLE.STUDENT, ROLE.TEACHER, ROLE.ADMIN]), asyncHandler(async (req, res, next) => {
     const { courseId } = req.params;
-    const userId= tokenService.getPayloadFromRequest(req).userId;
-    const lessons = await lessonService.getAllLessons(userId,courseId);
-    return res.status(httpStatus.OK).json(lessons);
+    const payload = tokenService.getPayloadFromRequest(req);
+    const userId = payload.userId;
+
+    const role = payload.role;
+
+    switch (role) {
+        case ROLE.STUDENT:
+            const lessons0 = await lessonService.getAllLessonsByStudent(userId, courseId);
+            return res.status(httpStatus.OK).json(lessons0);
+        case ROLE.TEACHER:
+            const lessons1 = await lessonService.getAllLessonsByTeacher(userId, courseId);
+            return res.status(httpStatus.OK).json(lessons1);
+        case ROLE.ADMIN:
+            const lessons2 = await lessonService.getAllLessons(userId, courseId);
+            return res.status(httpStatus.OK).json(lessons2);
+    }
 })
 );
 
 //get preview lessons 
-router.get('/:courseId/preview',asyncHandler(async (req, res, next) => {
+router.get('/:courseId/preview', asyncHandler(async (req, res, next) => {
     const { courseId } = req.params;
     const lessons = await lessonService.getPreviewLessons(courseId);
     return res.status(httpStatus.OK).json(lessons);
@@ -150,7 +163,7 @@ router.get('/:courseId/preview',asyncHandler(async (req, res, next) => {
 );
 
 //get course lesson by lessonNumber 
-router.get('/:courseId/lessons/:lessonNumber',auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
+router.get('/:courseId/lessons/:lessonNumber', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
     const { courseId, lessonNumber } = req.params;
     const lesson = await lessonService.getLessonByLessonNumber(courseId, lessonNumber);
     if (!lesson) res.status(httpStatus.NOT_FOUND).json({

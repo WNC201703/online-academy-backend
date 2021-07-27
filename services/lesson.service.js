@@ -3,6 +3,7 @@ const lessonModel = require("../models/lesson.model");
 const enrollmentModel = require("../models/enrollment.model");
 const completedLessonModel = require("../models/completedLesson.model");
 const { Lesson } = lessonModel;
+const { Course } = courseModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const cloudinary = require('../utils/cloudinary');
@@ -27,9 +28,14 @@ async function addLesson(courseId, teacherId, name, description, video) {
     return lesson;
 }
 
-async function getAllLessons(userId, courseId) {
+async function getAllLessons(courseId) {
+    const lessons = await lessonModel.getAllLessons(courseId);
+    return lessons;
+}
+
+async function getAllLessonsByStudent(userId, courseId) {
     const enrollment = await enrollmentModel.get(courseId, userId);
-    if (!enrollment) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid");
+    if (!enrollment) throw new ApiError(httpStatus.FORBIDDEN, "Not found enrollment");
     const lessons = await lessonModel.getAllLessons(courseId);
     const data = await completedLessonModel.get(userId, courseId);
     const completedLessons = data.map((item) => '' + item.lesson);
@@ -44,11 +50,18 @@ async function getAllLessons(userId, courseId) {
     return lessons;
 }
 
-async function getPreviewLessons(courseId){
+async function getAllLessonsByTeacher(teacherId, courseId) {
+    const course = await Course.findOne({ _id: courseId, teacher: teacherId });
+    if (!course) throw new ApiError(httpStatus.FORBIDDEN, "Access denied");
+    const lessons = await lessonModel.getAllLessons(courseId);
+    return lessons;
+}
+
+async function getPreviewLessons(courseId) {
     const lessons = await lessonModel.getPreviewLessons(courseId);
     lessons.forEach(element => {
-        if (element._doc.lessonNumber>3) {
-            element._doc.videoUrl=null;
+        if (element._doc.lessonNumber > 3) {
+            element._doc.videoUrl = null;
         }
     });
     return lessons;
@@ -86,6 +99,8 @@ async function verifyTeacher(courseId, teacherId) {
 module.exports = {
     addLesson,
     getAllLessons,
+    getAllLessonsByStudent,
+    getAllLessonsByTeacher,
     getPreviewLessons,
     getLessonByLessonNumber,
     uploadLessonVideo,
