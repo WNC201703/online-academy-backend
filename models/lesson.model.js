@@ -56,10 +56,10 @@ async function getLessonByLessonNumber(courseId,lessonNumber){
     return lesson;
 }
 
-async function updateLesson(courseId,lessonNumber, newData) {
+async function updateLesson(courseId,lessonId, newData) {
     newData.updatedAt=Date.now();
-    const lesson = await Lesson.findOneAndUpdate({course:courseId,lessonNumber:lessonNumber}, newData);
-    const updatedLesson = await Lesson.findOne({ course: courseId ,lessonNumber:lessonNumber}, { __v: 0 });
+    const lesson = await Lesson.findOneAndUpdate({course:courseId,_id:lessonId}, newData);
+    const updatedLesson = await Lesson.findOne({ course: courseId ,_id:lessonId}, { __v: 0 });
     return updatedLesson;
 }
 

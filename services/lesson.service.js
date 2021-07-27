@@ -72,23 +72,23 @@ async function getLessonByLessonNumber(courseId, lessonNumber) {
     return lesson;
 }
 
-async function uploadLessonVideo(file, teacherId, courseId, lessonNumber) {
+async function uploadLessonVideo(file, teacherId, courseId, lessonId) {
     await verifyTeacher(courseId, teacherId);
     try {
         const uploadResponse = await cloudinary.uploader.upload(file.path,
-            { resource_type: "video", public_id: `courses/${courseId}/lessons/${lessonNumber}` });
+            { resource_type: "video", public_id: `courses/${courseId}/lessons/${lessonId}` });
         console.log(uploadResponse);
-        const course = await lessonModel.updateLesson(courseId, lessonNumber, { videoUrl: uploadResponse.secure_url });
+        const course = await lessonModel.updateLesson(courseId, lessonId, { videoUrl: uploadResponse.secure_url });
         return course.videoUrl;
     } catch (err) {
         console.error(err);
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Something went wrong');
     }
 }
-async function updateLessonInfo(courseId, teacherId, lessonNumber, body) {
+async function updateLessonInfo(courseId, teacherId, lessonId, body) {
     const { videoUrl, ...newData } = body;
     await verifyTeacher(courseId, teacherId);
-    const course = await lessonModel.updateLesson(courseId, lessonNumber, newData);
+    const course = await lessonModel.updateLesson(courseId, lessonId, newData);
     return course;
 }
 
