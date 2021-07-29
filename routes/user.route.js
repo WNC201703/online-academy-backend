@@ -48,10 +48,27 @@ router.post('/login', asyncHandler(async (req, res, next) => {
 router.put('/:userId', auth(), asyncHandler(async (req, res, next) => {
   const role = tokenService.getPayloadFromRequest(req).role;
   if (role === ROLE.ADMIN) {
-    const { userId } = req.params;
+    let userId = req.params.userId;
+    //id from access token
+    const decodedUserId = tokenService.getPayloadFromRequest(req).userId;
+    if (userId === 'me') userId = decodedUserId;
+
+    //admin id === userId => edit admin info
+    if (userId === decodedUserId) {
+      const { currentPassword } = req.body;
+      if (!currentPassword)
+        return res.status(httpStatus.UNAUTHORIZED).json({
+          error_message: 'currentPassword required'
+        });
+      const user = await userService.updateUserInfo(userId, req.body);
+      return res.status(httpStatus.OK).json({ user });
+    }
+
+    //edit user info
     const user = await userService.updateUserInfoByAdmin(userId, req.body);
     return res.status(httpStatus.OK).json({ user });
   }
+  //role: student, teacher
   else {
     const userId = userService.parseUserId(req, false);
     const { currentPassword } = req.body;
@@ -144,8 +161,8 @@ router.get('/:userId/courses', auth([ROLE.STUDENT]), asyncHandler(async (req, re
 //get enrollment by courseId
 router.get('/:userId/courses/:courseId', auth([ROLE.STUDENT]), asyncHandler(async (req, res, next) => {
   const userId = userService.parseUserId(req, false);
-  const {courseId}= req.params;
-  const enrollments = await courseService.getEnrollmentByStudentIdAndCourseId(userId,courseId);
+  const { courseId } = req.params;
+  const enrollments = await courseService.getEnrollmentByStudentIdAndCourseId(userId, courseId);
   return res.status(httpStatus.OK).json(enrollments);
 })
 );
