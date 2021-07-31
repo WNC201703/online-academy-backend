@@ -48,8 +48,10 @@ async function getCourseById(courseId) {
             }
         }
     ]);
+    const newestCoursesId = await getNewestCoursesId();
+    const bestSellerCoursesId = await getBestSellerCoursesId();
 
-    const count = await enrollmentModel.countByCourseId(courseId);
+    const count = await enrollmentModel.countByCourseId(course._id);
     let data = course._doc;
     data.teacher = course._doc.teacher.fullname;
     data.category = course._doc.category.name;
@@ -57,7 +59,9 @@ async function getCourseById(courseId) {
         ...data,
         averageRating: courseReview[0] ? courseReview[0].avgRating.toFixed(2) : 0,
         numberOfReviews: courseReview[0] ? courseReview[0].numberOfReviews.toFixed(2) : 0,
-        enrollments: count
+        enrollments: count,
+        new: newestCoursesId.includes(`${course._id}`),
+        bestseller: bestSellerCoursesId.includes(`${course._id}`)
     };
 }
 
@@ -111,38 +115,8 @@ async function getPopularCourses() {
         }
     ]);
 
-    const courses = await Course.find({
-        _id: {
-            $in: aggregate.map(item => item._id)
-        }
-    })
-        .select('-__v')
-        .populate('teacher', 'fullname')
-        .populate('category', 'name');
-
-    let coursesReview = {};
-    aggregate.forEach(element => {
-        coursesReview[element._id] = {
-            averageRating: element.averageRating.toFixed(2),
-            numberOfReviews: element.numberOfReviews
-        };
-    });
-
-    let results = [];
-    courses.forEach(element => {
-        const id = element._id;
-        const reviewObj = coursesReview[id];
-        let data = element._doc;
-        data.teacher = data.teacher.fullname;
-        data.category = data.category.name;
-        results.push({
-            ...data,
-            averageRating: reviewObj ? reviewObj.averageRating.toFixed(2) : 0,
-            numberOfReviews: reviewObj ? reviewObj.numberOfReviews : 0,
-        });
-    });
+    const results = await getCoursesByIdList(aggregate.map(item => item._id));
     return results;
-
 }
 
 async function getNewestCourses() {
@@ -191,7 +165,7 @@ async function getRelatedCourses(courseId) {
 
 async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     if (!pageNumber) pageNumber = 1;
-    if (!pageSize || pageSize<1) pageSize = 10;
+    if (!pageSize || pageSize < 1) pageSize = 10;
     let sort = {};
     const categories = await categoryModel.getCategoryAndChildren(categoryId);
     if (sortBy) {
@@ -204,7 +178,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
         });
     }
-    if (!Object.keys(sort).length) sort = {_id:1};
+    if (!Object.keys(sort).length) sort = { _id: 1 };
     let regex = new RegExp(keyword, 'i');
     let obj = {};
     if (keyword) obj['name'] = regex;
@@ -247,12 +221,19 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         },
     ]);
 
+    const newestCoursesId = await getNewestCoursesId();
+    const bestSellerCoursesId = await getBestSellerCoursesId();
+
     const courses = courseAggregate.map((element) => {
+        const data = element.document;
         const newObj = {
-            ...(element.document), numberOfReviews: element.numberOfReviews
+            ...data,
+            numberOfReviews: element.numberOfReviews,
+            new: newestCoursesId.includes(`${data._id}`),
+            bestseller: bestSellerCoursesId.includes(`${data._id}`)
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
-        else newObj.averageRating=newObj.averageRating.toFixed(2);
+        else newObj.averageRating = newObj.averageRating.toFixed(2);
         newObj.category = newObj.category[0]?.name;
         newObj.teacher = newObj.teacher[0]?.fullname;
         delete newObj.review;
@@ -271,7 +252,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
 }
 
 async function updateCourse(courseId, teacherId, body) {
-    const { imageUrl, view, _id ,createdAt, updatedAt , ...newData } = body;
+    const { imageUrl, view, _id, createdAt, updatedAt, ...newData } = body;
     await verifyTeacher(courseId, teacherId);
     const course = await courseModel.updateCourse(courseId, newData);
     return course;
@@ -309,8 +290,8 @@ async function getEnrollmentsByStudentId(studentId) {
     return results;
 }
 
-async function getEnrollmentByStudentIdAndCourseId(studentId,courseId) {
-    const enrollment = await enrollmentModel.get(courseId,studentId);
+async function getEnrollmentByStudentIdAndCourseId(studentId, courseId) {
+    const enrollment = await enrollmentModel.get(courseId, studentId);
     return enrollment;
 }
 
@@ -379,6 +360,7 @@ async function verifyTeacher(courseId, teacherId) {
 
 //get and format 
 async function getCoursesByIdList(idList) {
+    console.log(idList);
     const courseAggregate = await Course.aggregate([
         {
             $match: {
@@ -404,10 +386,10 @@ async function getCoursesByIdList(idList) {
             $lookup: { from: 'users', localField: 'teacher', foreignField: '_id', as: 'teacher' }
         },
         {
-            $sort: {
-                createdAt: 1
-            }
+            $addFields:
+                { __order: { $indexOfArray: [idList, "$_id"] } }
         },
+        { $sort: { __order: 1 } },
         {
             $project: {
                 document: '$$ROOT',
@@ -416,20 +398,54 @@ async function getCoursesByIdList(idList) {
         },
     ]);
 
+    const newestCoursesId = await getNewestCoursesId();
+    const bestSellerCoursesId = await getBestSellerCoursesId();
+
     const courses = courseAggregate.map((element) => {
+        const data = element.document;
         const newObj = {
-            ...(element.document),
-            numberOfReviews: element.numberOfReviews
+            ...data,
+            numberOfReviews: element.numberOfReviews,
+            new: newestCoursesId.includes(`${data._id}`),
+            bestseller: bestSellerCoursesId.includes(`${data._id}`)
         }
         if (!newObj.averageRating) newObj.averageRating = 0;
-        else newObj.averageRating=newObj.averageRating.toFixed(2);
+        else newObj.averageRating = newObj.averageRating.toFixed(2);
         newObj.category = newObj.category[0]?.name;
         newObj.teacher = newObj.teacher[0]?.fullname;
+        delete newObj.__order;
         delete newObj.review;
         delete newObj.__v;
         return newObj;
     });
     return courses
+}
+
+async function getNewestCoursesId() {
+    const courses = await Course.find().sort({ createdAt: -1 }).limit(5).select('_id');
+    const coursesId = courses.map((e) => e._id.toString());
+    return coursesId;
+}
+
+async function getBestSellerCoursesId() {
+    const aggregate = await Enrollment.aggregate([
+        {
+            $group: {
+                _id: '$course',
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: {
+                count: -1,
+            }
+        },
+        {
+            $limit: 5
+        },
+    ]);
+    const coursesId = aggregate.map((e) => e._id.toString());
+    return coursesId;
 }
 
 module.exports = {
