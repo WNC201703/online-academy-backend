@@ -1,8 +1,12 @@
+const e = require('express');
 const httpStatus = require('http-status');
 const Joi = require('joi');
 const ApiError = require('../utils/ApiError');
-module.exports = (schema) => (req, res, next) => {
-    const {value,error} = schema.validate(req.body);
+module.exports = (schema,property) => (req, res, next) => {
+    let input;
+    if (!property) input=req.body;
+    else input=req[property];
+    const {value,error} = schema.validate(input);
    
     if (error) {
         const { details } = error;
