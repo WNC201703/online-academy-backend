@@ -7,12 +7,15 @@ const lessonService = require('../services/lesson.service');
 const tokenService = require('../services/token.service')
 const upload = require("../utils/upload");
 const auth = require('../middlewares/auth.mdw');
+const validate = require('../middlewares/validate.mdw');
+const courseSchema = require('../schemas/course.schema');
 const { ROLE } = require('../utils/constants')
 
 //create a course
 router.post('/',
     auth([ROLE.TEACHER]),
     upload.single("image"),
+    validate(courseSchema.coursePOST),
     asyncHandler(async (req, res, next) => {
         console.log('post');
         const decoded = tokenService.getPayloadFromRequest(req);
@@ -27,6 +30,7 @@ router.post('/',
 
 //get courses
 router.get('/',
+    validate(courseSchema.courseGET,'query'),
     asyncHandler(async (req, res, next) => {
         const { page_number, page_size, sort_by, key_word, category } = req.query;
         const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word, category);
@@ -77,6 +81,7 @@ router.get('/:courseId',
 
 router.put('/:courseId',
     auth([ROLE.TEACHER]),
+    validate(courseSchema.coursePUT),
     asyncHandler(async (req, res, next) => {
         const courseId = req.params.courseId;
         const teacherId = tokenService.getPayloadFromRequest(req).userId;
@@ -112,6 +117,7 @@ router.post('/:courseId/enrollments',
 );
 
 router.get('/:courseId/reviews',
+validate(courseSchema.courseReviewGET,'query'),
     asyncHandler(async (req, res, next) => {
         const courseId = req.params.courseId;
         const { page_number, page_size } = req.query;
@@ -122,6 +128,7 @@ router.get('/:courseId/reviews',
 
 router.post('/:courseId/reviews',
     auth([ROLE.STUDENT]),
+    validate(courseSchema.courseReviewPOST),
     asyncHandler(async (req, res, next) => {
         const { review, rating } = req.body;
         const courseId = req.params.courseId;
@@ -146,7 +153,9 @@ router.put('/:courseId/image',
 //add course lessons 
 router.post('/:courseId/lessons',
     auth([ROLE.TEACHER]),
-    upload.single("video"), asyncHandler(async (req, res, next) => {
+    upload.single("video"), 
+    validate(courseSchema.courseLessonPOST),
+    asyncHandler(async (req, res, next) => {
         const teacherId = tokenService.getPayloadFromRequest(req).userId;
         const { name, description } = req.body;
         const { courseId } = req.params;
@@ -205,6 +214,7 @@ router.get('/:courseId/lessons/:lessonNumber',
 //update lesson 
 router.put('/:courseId/lessons/:lessonId',
     auth([ROLE.TEACHER]),
+    validate(courseSchema.courseLessonPUT),
     asyncHandler(async (req, res, next) => {
         const { courseId, lessonId } = req.params;
         const teacherId = tokenService.getPayloadFromRequest(req).userId;
