@@ -44,6 +44,7 @@ const userSchema = mongoose.Schema(
     verification_token: {
       type: String,
     },
+    refreshToken: { type:String },
     createdAt: { type: Date, default: Date.now },
   },
 );
@@ -99,6 +100,11 @@ async function deleteUser(userId){
   return result;
 }
 
+async function addRefreshToken(userId,refreshToken){
+  const result=await User.findByIdAndUpdate(userId,{refreshToken:refreshToken});
+  return result;
+}
+
 module.exports = {
   User,
   isEmailTaken,
@@ -108,4 +114,5 @@ module.exports = {
   getUserById,
   updateUserInfo,
   deleteUser,
+  addRefreshToken,
 };

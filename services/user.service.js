@@ -12,7 +12,7 @@ const { Token } = tokenModel;
 const tokenService = require('../services/token.service');
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
-const { generateAccessToken } = require('./token.service');
+const { generateAccessToken,generateRefreshToken } = require('./token.service');
 const ApiError = require('../utils/ApiError');
 const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const httpStatus = require('http-status')
@@ -139,10 +139,12 @@ const verifyUserEmail = async (token) => {
     }
 
     const accessToken = generateAccessToken(user.email, user._id, user.role);
+    const refreshToken =await generateRefreshToken(user._id);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
-      accessToken: accessToken
+      accessToken: accessToken,
+      refreshToken:refreshToken
     };
   }
 
@@ -169,10 +171,12 @@ async function login(body) {
     if (!user.active) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
 
     const accessToken = generateAccessToken(user.email, user._id, user.role);
+    const refreshToken =await generateRefreshToken(user._id);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
-      accessToken: accessToken
+      accessToken: accessToken,
+      refreshToken: refreshToken
     };
 
   }
@@ -275,6 +279,11 @@ async function deleteCompletedLesson(userId, courseId, lessonId) {
   return result;
 }
 
+async function findUserByRefreshToken(userId, refreshToken) {
+  const user = await User.findOne({_id:userId,refreshToken:refreshToken});
+  return user;
+}
+
 function parseUserId(request, isAdmin) {
   const paramUserId = request.params.userId;
   const decodedUserId = tokenService.getPayloadFromRequest(request).userId;
@@ -289,6 +298,7 @@ function parseUserId(request, isAdmin) {
 
   return paramUserId;
 }
+
 module.exports = {
   parseUserId,
 
@@ -304,6 +314,7 @@ module.exports = {
   updateUserInfo,
   createTeacher,
   deleteUser,
+  findUserByRefreshToken,
 
   getFavoriteCourses,
   favoriteCourse,

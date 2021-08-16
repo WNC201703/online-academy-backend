@@ -41,14 +41,15 @@ router.get('/',
 );
 
 router.post('/login',
-  validate(userSchema.userLOGIN), 
+  validate(userSchema.userLOGIN),
   asyncHandler(async (req, res, next) => {
-    const { user, accessToken, } = await userService.login(req.body);
+    const { user, accessToken, refreshToken } = await userService.login(req.body);
     if (!!accessToken)
       return res.status(httpStatus.OK).json({
         authenticated: true,
         user,
         accessToken,
+        refreshToken
       });
     else
       return res.status(httpStatus.UNAUTHORIZED).json({ authenticated: false, });
@@ -58,7 +59,7 @@ router.post('/login',
 //update user info 
 router.put('/:userId',
   auth(),
-  validate(userSchema.userPUT), 
+  validate(userSchema.userPUT),
   asyncHandler(async (req, res, next) => {
     const role = tokenService.getPayloadFromRequest(req).role;
     if (role === ROLE.ADMIN) {
@@ -117,7 +118,7 @@ router.get('/:userId',
 // );
 
 router.post('/email/verify/send',
-  validate(userSchema.userEmailVERIFICATION), 
+  validate(userSchema.userEmailVERIFICATION),
   asyncHandler(async (req, res, next) => {
     const { email } = req.body;
     await userService.sendVerificationEmail(email);
@@ -166,7 +167,7 @@ router.put('/:userId/password/reset',
 
 router.put('/:userId/email',
   auth(),
-  validate(userSchema.userEmailPUT), 
+  validate(userSchema.userEmailPUT),
   asyncHandler(async (req, res, next) => {
     const { currentPassword, newEmail } = req.body;
     const userId = userService.parseUserId(req, false);
@@ -288,4 +289,26 @@ router.delete('/:userId/courses/:courseId/completed-lesson',
   })
 );
 
+router.post('/:userId/access-token/refresh',
+  auth(),
+  asyncHandler(async (req, res, next) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(httpStatus.BAD_REQUEST).json({
+      error_message: 'refresh token is required'
+    }); 
+    const userId = userService.parseUserId(req, false);
+    const user = await userService.findUserByRefreshToken(userId, refreshToken);
+    console.log(user);
+    if (user) {
+      const newAccessToken = tokenService.generateAccessToken(user.email, user._id, user.role);
+      return res.status(httpStatus.OK).json({
+        accessToken: newAccessToken
+      });
+    }
+
+    return res.status(httpStatus.BAD_REQUEST).json({
+      error_message: 'Refresh token is revoked!'
+    });
+  })
+);
 module.exports = router;

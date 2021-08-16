@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-
+const userModel = require("../models/user.model");
+const randomstring = require('randomstring');
 const getAccessToken = (req) => {
     const authorization = req.header('Authorization');
     if (!authorization) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
@@ -25,9 +26,17 @@ function generateAccessToken(email, id, role) {
     }
     return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '86400s' });
 }
+
+async function generateRefreshToken(userId) {
+    const refreshToken = randomstring.generate(80);
+    await userModel.addRefreshToken(userId, refreshToken);
+    return refreshToken;
+}
+
 module.exports = {
     getPayloadFromToken,
     getPayloadFromRequest,
     getAccessToken,
-    generateAccessToken
+    generateAccessToken,
+    generateRefreshToken,
 }
