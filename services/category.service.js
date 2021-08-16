@@ -6,7 +6,6 @@ const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 
 async function createCategory(parent, name) {
-    console.log(parent, name);
     const category = await categoryModel.addNewCategory(parent, name)
     return category;
 }
@@ -101,6 +100,8 @@ async function getTopEnrrollmentCategoriesOfWeek() {
 
 
 async function updateCategory(categoryId, body) {
+    const checkCategory=await Category.findById(categoryId);
+    if (!checkCategory) throw new ApiError(httpStatus.BAD_REQUEST,'Category not found');
     const category = await categoryModel.updateCategory(categoryId, body);
     return category;
 }
