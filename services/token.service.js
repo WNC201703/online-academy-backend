@@ -8,6 +8,11 @@ const getAccessToken = (req) => {
     return token;
 }
 
+const getRefreshToken = (req) => {
+    const refreshToken = req.header('refresh-token');
+    return refreshToken;
+}
+
 const getPayloadFromToken = (token) => {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
     return decoded;
@@ -37,6 +42,7 @@ module.exports = {
     getPayloadFromToken,
     getPayloadFromRequest,
     getAccessToken,
+    getRefreshToken,
     generateAccessToken,
     generateRefreshToken,
 }

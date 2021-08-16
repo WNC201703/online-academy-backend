@@ -298,7 +298,6 @@ router.post('/:userId/access-token/refresh',
     }); 
     const userId = userService.parseUserId(req, false);
     const user = await userService.findUserByRefreshToken(userId, refreshToken);
-    console.log(user);
     if (user) {
       const newAccessToken = tokenService.generateAccessToken(user.email, user._id, user.role);
       return res.status(httpStatus.OK).json({

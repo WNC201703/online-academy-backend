@@ -12,11 +12,11 @@ courseSchema.coursePOST = Joi.object({
 });
 
 courseSchema.courseGET = Joi.object({
-    page_number:Joi.number(), 
-    page_size:Joi.number(), 
-    sort_by:Joi.string(), 
-    key_word:Joi.string(), 
-    category:Joi.string()
+    page_number:Joi.allow(), 
+    page_size:Joi.allow(), 
+    sort_by:Joi.allow(), 
+    key_word:Joi.allow(), 
+    category:Joi.allow()
 });
 
 courseSchema.coursePUT=Joi.object({

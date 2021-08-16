@@ -31,8 +31,10 @@ module.exports = (requiredRoles) => (req, res, next) => {
             reject(err);
         }
         resolve();
-    }).then(() => next()).catch((err) => {
-        console.log(err);
-        return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+    }).then(() => next()).catch(async(err) => {
+        if (err.name==='TokenExpiredError') {
+            return res.status(httpStatus.UNAUTHORIZED).send('Access Denied: Token expired');
+        }
+        return res.status(httpStatus.UNAUTHORIZED).send(`Access Denied :${err.name}`);
     });
 };
