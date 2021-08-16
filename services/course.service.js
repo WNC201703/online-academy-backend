@@ -180,6 +180,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     }
     if (!Object.keys(sort).length) sort = { _id: 1 };
     let regex = new RegExp(keyword, 'i');
+    console.log(regex);
     let obj = {};
     if (keyword) obj['name'] = regex;
     if (categories) obj['category'] = { '$in': categories.map(item => item._id) };

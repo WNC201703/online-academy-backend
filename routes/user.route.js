@@ -6,11 +6,13 @@ const userService = require('../services/user.service');
 const tokenService = require('../services/token.service');
 const courseService = require('../services/course.service');
 const auth = require('../middlewares/auth.mdw');
+const validate = require('../middlewares/validate.mdw');
+const authSchema = require('../schemas/auth.schema');
 const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const ApiError = require('../utils/ApiError');
 
 //create a student
-router.post('/', asyncHandler(async (req, res, next) => {
+router.post('/', validate(authSchema.createAccountSchema),asyncHandler(async (req, res, next) => {
   await userService.signUp(req.body);
   return res.status(httpStatus.CREATED).json({ success: true, message: 'A verification email has been sent to email' });
 })
