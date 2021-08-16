@@ -176,7 +176,7 @@ router.put('/:userId/email',
   }));
 
 //get enrollments
-router.get('/:userId/courses',
+router.get('/:userId/enrollments',
   auth([ROLE.STUDENT]),
   asyncHandler(async (req, res, next) => {
     const userId = userService.parseUserId(req, false);
