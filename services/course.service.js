@@ -181,11 +181,10 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             sort[spl[0]] = spl[1] === 'desc' ? 1 : -1;
         });
     }
-    console.log(sort);
     if (!Object.keys(sort).length) sort = { _id: 1 };
-    let query = {};
+    let obj = {};
     if (keyword){
-        query={
+        obj={
             $text: {
                 $search: `"${keyword}"`,
                 $caseSensitive: false,
@@ -193,10 +192,11 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
         };
     }
    
-    const totalCount = await Course.countDocuments(query);
+    if (categories) obj['category'] = { '$in': categories.map(item => item._id) };
+    const totalCount = await Course.countDocuments(obj);
     const courseAggregate = await Course.aggregate([
         {
-            $match: query
+            $match: obj
         },
         {
             $lookup: { from: 'reviews', localField: '_id', foreignField: 'course', as: 'review' }
