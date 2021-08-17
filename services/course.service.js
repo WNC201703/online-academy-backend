@@ -72,6 +72,35 @@ async function getAll() {
     return courses;
 }
 
+async function getTopCoursesOfTheWeek() {
+    const today = new Date();
+    let sDay = new Date();
+    sDay.setDate(today.getDate() - 7);
+    const aggregate = await Review.aggregate([
+        {
+            $match: {
+                createdAt:
+                    { $gte: sDay, $lte: today }
+            }
+        },
+        {
+            $group: {
+                _id: '$course',
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { count: - 1 }
+        },
+        {
+            $limit: 3
+        },
+    ]);
+    console.log(aggregate);
+
+    const results = await getCoursesByIdList(aggregate.map(item => item._id));
+    return results;
+}
 
 async function getPopularCourses() {
     // const courses = await courseModel.getPopularCourses();
@@ -476,6 +505,7 @@ module.exports = {
     getEnrollmentsByStudentId,
     getEnrollmentByStudentIdAndCourseId,
     getPopularCourses,
+    getTopCoursesOfTheWeek,
     getNewestCourses,
     getTopViewedCourses,
     getRelatedCourses,

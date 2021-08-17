@@ -38,6 +38,14 @@ router.get('/',
     })
 );
 
+//get top courses
+router.get('/top',
+    asyncHandler(async (req, res, next) => {
+        const courses = await courseService.getTopCoursesOfTheWeek();
+        return res.status(httpStatus.OK).json(courses);
+    })
+);
+
 //get popular courses
 router.get('/popular',
     asyncHandler(async (req, res, next) => {
