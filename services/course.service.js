@@ -175,9 +175,13 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
             if (spl[0] === 'rating') {
                 spl[0] = 'averageRating';
             }
-            sort[spl[0]] = spl[1] === 'desc' ? -1 : 1;
+            if (spl[0] === 'reviews') {
+                spl[0] = 'numberOfReviews';
+            }
+            sort[spl[0]] = spl[1] === 'desc' ? 1 : -1;
         });
     }
+    console.log(sort);
     if (!Object.keys(sort).length) sort = { _id: 1 };
     let query = {};
     if (keyword){
@@ -202,6 +206,7 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
                 averageRating: {
                     $avg: "$review.rating",
                 },
+                numberOfReviews: { $size: "$review" },
             }
         },
         {
