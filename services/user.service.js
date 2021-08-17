@@ -248,6 +248,12 @@ async function getFavoriteCourses(userId) {
   const results=await courseService.getCoursesByIdList(favorites.map(item => item.course));
   return results;
 }
+
+async function getFavoriteCourseByCourseId(userId,courseId) {
+  const favorite = await favoriteModel.get(userId,courseId);
+  return favorite;
+}
+
 async function favoriteCourse(userId, courseId) {
   const favorite = await favoriteModel.get(userId, courseId);
   if (favorite) return favorite;
@@ -316,6 +322,7 @@ module.exports = {
   deleteUser,
   findUserByRefreshToken,
 
+  getFavoriteCourseByCourseId,
   getFavoriteCourses,
   favoriteCourse,
   unFavoriteCourse,

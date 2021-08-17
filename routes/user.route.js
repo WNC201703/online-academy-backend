@@ -177,7 +177,7 @@ router.put('/:userId/email',
 
 //get enrollments
 router.get('/:userId/enrollments',
-  auth([ROLE.STUDENT]),
+  auth(),
   asyncHandler(async (req, res, next) => {
     const userId = userService.parseUserId(req, false);
     const enrollments = await courseService.getEnrollmentsByStudentId(userId);
@@ -186,13 +186,14 @@ router.get('/:userId/enrollments',
 );
 
 //get enrollment by courseId
-router.get('/:userId/courses/:courseId',
-  auth([ROLE.STUDENT]),
+router.get('/:userId/enrollments/:courseId',
+  auth(),
   asyncHandler(async (req, res, next) => {
     const userId = userService.parseUserId(req, false);
     const { courseId } = req.params;
-    const enrollments = await courseService.getEnrollmentByStudentIdAndCourseId(userId, courseId);
-    return res.status(httpStatus.OK).json(enrollments);
+    const enrollment = await courseService.getEnrollmentByStudentIdAndCourseId(userId, courseId);
+    if (!enrollment) return res.status(httpStatus.NOT_FOUND).json();
+    return res.status(httpStatus.OK).json(enrollment);
   })
 );
 
@@ -223,6 +224,18 @@ router.get('/:userId/favorites',
     return res.status(httpStatus.OK).json(results);
   })
 );
+
+router.get('/:userId/favorites/:courseId',
+  auth(),
+  asyncHandler(async (req, res, next) => {
+    const userId = userService.parseUserId(req, false);
+    const courseId = req.params.courseId;
+    const result = await userService.getFavoriteCourseByCourseId(userId, courseId);
+    if (!result) return res.status(httpStatus.NOT_FOUND).json();
+    return res.status(httpStatus.OK).json(result);
+  })
+);
+
 
 router.put('/:userId/favorites/:courseId',
   auth([ROLE.STUDENT, ROLE.TEACHER]),
