@@ -78,12 +78,12 @@ async function getPopularCourses() {
     let sDay = new Date();
     sDay.setDate(today.getDate() - 7);
     const aggregate = await Enrollment.aggregate([
-        {
-            $match: {
-                createdAt:
-                    { $gte: sDay, $lte: today }
-            }
-        },
+        // {
+        //     $match: {
+        //         createdAt:
+        //             { $gte: sDay, $lte: today }
+        //     }
+        // },
         {
             $group: {
                 _id: '$course',
@@ -94,7 +94,7 @@ async function getPopularCourses() {
             $sort: { count: - 1 }
         },
         {
-            $limit: 4
+            $limit: 5
         },
         {
             $lookup: { from: 'reviews', localField: '_id', foreignField: 'course', as: 'review' }
