@@ -9,6 +9,7 @@ const { Course } = courseModel;
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status');
 const cloudinary = require('../utils/cloudinary');
+const { User } = require("../models/user.model");
 
 async function createCourse(teacherId, data, image) {
     const course = await courseModel.addNewCourse(teacherId, data);
@@ -163,7 +164,7 @@ async function getRelatedCourses(courseId) {
     return results;
 }
 
-async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
+async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId, teacher) {
     if (!pageNumber) pageNumber = 1;
     if (!pageSize || pageSize < 1) pageSize = 10;
     let sort = {};
@@ -183,16 +184,23 @@ async function getCourses(pageNumber, pageSize, sortBy, keyword, categoryId) {
     }
     if (!Object.keys(sort).length) sort = { _id: 1 };
     let obj = {};
-    if (keyword){
-        obj={
+    if (keyword) {
+        obj = {
             $text: {
                 $search: `"${keyword}"`,
                 $caseSensitive: false,
             }
         };
     }
-   
-    if (categories) obj['category'] = { '$in': categories.map(item => item._id) };
+    if (categories) {
+        obj['category'] = { '$in': categories.map(item => item._id) };
+    }
+    if (teacher) {
+        let regex = new RegExp(`${teacher}`, 'i');
+        const teachers = await User.find({ fullname: regex });
+        obj['teacher'] = { '$in': teachers.map(item => item._id) };;
+    }
+
     const totalCount = await Course.countDocuments(obj);
     const courseAggregate = await Course.aggregate([
         {
@@ -325,7 +333,6 @@ async function addReview(courseId, userId, review, rating) {
 async function getReviews(courseId, pageNumber, pageSize) {
     if (!pageNumber) pageNumber = 1;
     if (pageSize !== 0 && !pageSize) pageSize = 10;
-    console.log(pageSize);
     const totalCount = await Review.find({ course: courseId }).countDocuments();
     const reviews = await Review
         .find({ course: courseId })

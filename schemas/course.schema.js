@@ -16,7 +16,8 @@ courseSchema.courseGET = Joi.object({
     page_size:Joi.allow(), 
     sort_by:Joi.allow(), 
     key_word:Joi.allow(), 
-    category:Joi.allow()
+    category:Joi.allow(),
+    teacher:Joi.allow(),
 });
 
 courseSchema.coursePUT=Joi.object({

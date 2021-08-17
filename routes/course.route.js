@@ -32,8 +32,8 @@ router.post('/',
 router.get('/',
     validate(courseSchema.courseGET,'query'),
     asyncHandler(async (req, res, next) => {
-        const { page_number, page_size, sort_by, key_word, category } = req.query;
-        const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word, category);
+        const { page_number, page_size, sort_by, key_word, category,teacher } = req.query;
+        const results = await courseService.getCourses(+page_number, +page_size, sort_by, key_word, category, teacher);
         return res.status(httpStatus.OK).json(results);
     })
 );
