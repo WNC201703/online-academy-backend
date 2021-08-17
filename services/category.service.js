@@ -25,6 +25,11 @@ async function getCategoriesByparent(parent) {
     return categories;
 }
 
+async function getSubCategories() {
+    const categories=await categoryModel.getSubCategories();
+    return categories;
+}
+
 async function getCategories(type) {
     if (type === 'list') {
         const categories = await categoryModel.getAll();
@@ -130,6 +135,7 @@ module.exports = {
     getCategoriesByparent,
     deleteCategory,
     getCategories,
+    getSubCategories,
     updateCategory,
     getTopEnrrollmentCategoriesOfWeek
 }

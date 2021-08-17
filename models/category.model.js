@@ -36,6 +36,11 @@ async function getSubCategoriesByParent(parentId) {
     return categories;
 }
 
+async function getSubCategories() {
+    const categories = await Category.find({ parent: {$ne:null} }).select('-__v -parent')
+    return categories;
+}
+
 async function updateCategory(categoryId, newData) {
     const category = await Category.findByIdAndUpdate(categoryId, newData);
     const updatedCategory = await Category.findById(categoryId, { __v: 0 });
@@ -107,5 +112,6 @@ module.exports = {
     getParentCategories,
     getCategoryAndChildren ,
     getSubCategoriesByParent ,
+    getSubCategories ,
     exists,
 };

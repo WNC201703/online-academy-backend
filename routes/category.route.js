@@ -21,6 +21,14 @@ router.post('/',
     })
 );
 
+//get category
+router.get('/sub-category',
+    asyncHandler(async (req, res, next) => {
+        const category = await categoryService.getSubCategories();
+        return res.status(httpStatus.OK).json(category);
+    })
+);
+
 //get categories
 router.get('/',
     asyncHandler(async (req, res, next) => {
