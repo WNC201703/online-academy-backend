@@ -52,6 +52,8 @@ const courseSchema = mongoose.Schema(
     },
 );
 
+courseSchema.index({ name: "text", shortDescription: "text",detailDescription:"text" });  
+
 const Course = mongoose.model('Course', courseSchema);
 
 async function exists(courseId) {

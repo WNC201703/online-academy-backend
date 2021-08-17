@@ -14,7 +14,6 @@ module.exports = (schema,property) => (req, res, next) => {
         throw new ApiError(httpStatus.BAD_REQUEST,message);
     } else {
         req.body=value;
-        console.log(req.body);
         next();
     }
 }
