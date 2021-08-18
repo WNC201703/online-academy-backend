@@ -12,7 +12,7 @@ const { Token } = tokenModel;
 const tokenService = require('../services/token.service');
 const mailService = require('./mail.service');
 const courseService = require('./course.service');
-const { generateAccessToken,generateRefreshToken } = require('./token.service');
+const { generateAccessToken, generateRefreshToken } = require('./token.service');
 const ApiError = require('../utils/ApiError');
 const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
 const httpStatus = require('http-status');
@@ -103,7 +103,7 @@ const sendVerificationEmail = async (email) => {
   }
 }
 
-const sendVerificationForNewEmail = async (userId,newEmail) => {
+const sendVerificationForNewEmail = async (userId, newEmail) => {
   const user = await userModel.getUserByEmail(newEmail);
 
   if (user) throw new ApiError(httpStatus.BAD_REQUEST, 'Email is taken');
@@ -140,21 +140,21 @@ const verifyUserEmail = async (token) => {
     }
 
     const accessToken = generateAccessToken(user.email, user._id, user.role);
-    const refreshToken =await generateRefreshToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
       accessToken: accessToken,
-      refreshToken:refreshToken
+      refreshToken: refreshToken
     };
   }
 
-  if (vrToken.type===VERIFY_TOKEN_TYPE.CHANGE_EMAIL){
-    const newEmail=vrToken.newEmail;
+  if (vrToken.type === VERIFY_TOKEN_TYPE.CHANGE_EMAIL) {
+    const newEmail = vrToken.newEmail;
     const user = await User.findOne({ _id: vrToken.user });
     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, 'We were unable to find a user for this verification.!');
 
-    user.email=newEmail;
+    user.email = newEmail;
     await user.save();
 
     return true;
@@ -172,7 +172,7 @@ async function login(body) {
     if (!user.active) throw new ApiError(httpStatus.FORBIDDEN, "Email not verified");
 
     const accessToken = generateAccessToken(user.email, user._id, user.role);
-    const refreshToken =await generateRefreshToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     const resUser = await User.findById(user._id).select('_id fullname email role');
     return {
       user: resUser,
@@ -204,9 +204,9 @@ async function updateUserInfoByAdmin(userId, body) {
   return user;
 }
 
-async function updateUserInfo(userId,body){
+async function updateUserInfo(userId, body) {
   let user = await User.findById(userId);
-  if (!user) throw new ApiError(httpStatus.BAD_REQUEST,'Not found user');
+  if (!user) throw new ApiError(httpStatus.BAD_REQUEST, 'Not found user');
   const validPassword = await user.validatePassword(body.currentPassword);
   console.log(validPassword);
   if (!validPassword) throw new ApiError(httpStatus.UNAUTHORIZED, "Email or password incorrect");
@@ -235,23 +235,23 @@ async function resetPassword(userId, currentPassword, newPassword) {
 
 async function updateEmail(userId, currentPassword, newEmail) {
   const user = await User.findById(userId);
-  if (user.email===newEmail) throw new ApiError(httpStatus.BAD_REQUEST, "Email not valid");
+  if (user.email === newEmail) throw new ApiError(httpStatus.BAD_REQUEST, "Email not valid");
   const valid = await user.validatePassword(currentPassword);
   if (!valid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password incorrect");
   else {
-    await sendVerificationForNewEmail(userId,newEmail);
+    await sendVerificationForNewEmail(userId, newEmail);
   }
 }
 
 
 async function getFavoriteCourses(userId) {
   const favorites = await favoriteModel.getByUserId(userId);
-  const results=await courseService.getCoursesByIdList(favorites.map(item => item.course));
+  const results = await courseService.getCoursesByIdList(favorites.map(item => item.course));
   return results;
 }
 
-async function getFavoriteCourseByCourseId(userId,courseId) {
-  const favorite = await favoriteModel.get(userId,courseId);
+async function getFavoriteCourseByCourseId(userId, courseId) {
+  const favorite = await favoriteModel.get(userId, courseId);
   return favorite;
 }
 
@@ -287,7 +287,7 @@ async function deleteCompletedLesson(userId, courseId, lessonId) {
 }
 
 async function findUserByRefreshToken(userId, refreshToken) {
-  const user = await User.findOne({_id:userId,refreshToken:refreshToken});
+  const user = await User.findOne({ _id: userId, refreshToken: refreshToken });
   return user;
 }
 
@@ -306,20 +306,43 @@ function parseUserId(request, isAdmin) {
   return paramUserId;
 }
 
-async function getTeacherProfile(userId){
-    let resBody={};
-    const profile=await teacherModel.getProfile(userId);
-    if (!profile) return {
-      name:'',introduction:''
-    }
-    resBody._id=userId;
-    resBody.name=profile.name;
-    resBody.introduction=profile.introduction;
-    return resBody;
+async function getTeacherProfile(userId) {
+  let resBody = {};
+  const profile = await teacherModel.getProfile(userId);
+  if (!profile) return {
+    name: '', introduction: ''
+  }
+  resBody._id = userId;
+  resBody.name = profile.name;
+  resBody.introduction = profile.introduction;
+
+  const courses = await Course.find({ teacher: userId }).select('_id');
+  const coursesId = courses.map(item => item._id);
+  resBody.courses = coursesId ? coursesId?.length : 0;
+  const students = await Enrollment.countDocuments({ course: { $in: coursesId } });
+  resBody.students = students;
+  const reviews = await Review.countDocuments({ course: { $in: coursesId } });
+  resBody.reviews = reviews;
+  const ratingAverage = await Review.aggregate(
+    [
+      {
+        $group:
+        {
+          _id: "$course",
+          avg: { $avg: "$rating" }
+        }
+      },
+    ]);
+  let total = 0;
+  ratingAverage.forEach(element => {
+    total += element.avg;
+  });
+  resBody.rating = (total / reviews).toFixed(2);
+  return resBody;
 }
 
-async function putTeacherProfile(userId,data){
-  const profile=await teacherModel.updateProfile(userId,data);
+async function putTeacherProfile(userId, data) {
+  const profile = await teacherModel.updateProfile(userId, data);
   return profile;
 }
 
