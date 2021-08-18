@@ -315,7 +315,6 @@ async function getTeacherProfile(userId){
 }
 
 async function putTeacherProfile(userId,data){
-  console.log(data);
   const profile=await teacherModel.updateProfile(userId,data);
   return profile;
 }

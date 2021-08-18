@@ -40,7 +40,8 @@ async function updateProfile(userId, data) {
     else {
         console.log(userId);
         const profile = await Teacher.findOneAndUpdate({user:userId},data);
-        return profile;
+        const newProfile=await getProfile(userId);
+        return newProfile;
     }
 }
 
