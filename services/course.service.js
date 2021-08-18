@@ -55,6 +55,7 @@ async function getCourseById(courseId) {
     const count = await enrollmentModel.countByCourseId(course._id);
     let data = course._doc;
     data.teacher = course._doc.teacher.fullname;
+    data.categoryId = course._doc.category._id;
     data.category = course._doc.category.name;
     return {
         ...data,
