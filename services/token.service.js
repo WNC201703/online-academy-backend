@@ -1,9 +1,12 @@
 const jwt = require('jsonwebtoken');
 const userModel = require("../models/user.model");
 const randomstring = require('randomstring');
+const ApiError = require('../utils/ApiError');
+const httpStatus = require('http-status');
 const getAccessToken = (req) => {
     const authorization = req.header('Authorization');
-    if (!authorization) return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
+    if (!authorization) throw new ApiError(httpStatus.UNAUTHORIZED,'Access Denied');
+    // return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
     const token = authorization.split(' ')[1];
     return token;
 }

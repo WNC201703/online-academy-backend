@@ -12,6 +12,7 @@ const ApiError = require('../utils/ApiError');
 
 router.get('/:userId',
   asyncHandler(async (req, res, next) => {
+    const userId = tokenService.getPayloadFromRequest(req).userId;
     const profile=await userService.getTeacherProfile(req.params.userId);
     return res.status(httpStatus.OK).json(profile);
   })
