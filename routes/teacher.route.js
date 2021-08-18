@@ -12,8 +12,16 @@ const ApiError = require('../utils/ApiError');
 
 router.get('/:userId',
   asyncHandler(async (req, res, next) => {
-    const userId = tokenService.getPayloadFromRequest(req).userId;
-    const profile=await userService.getTeacherProfile(req.params.userId);
+    let userId=req.params.userId;
+    if (req.params.userId==='me'){
+     
+      try{
+        userId = tokenService.getPayloadFromRequest(req).userId;
+      }catch(err){
+        return res.status(httpStatus.UNAUTHORIZED).json('Access denied');
+      }
+    }
+    const profile=await userService.getTeacherProfile(userId);
     return res.status(httpStatus.OK).json(profile);
   })
 );
