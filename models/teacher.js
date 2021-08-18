@@ -25,7 +25,7 @@ async function addTeacherProfile(userId, name, introduction) {
 }
 
 async function getProfile(userId) {
-    const profile = await Teacher.find({user:userId});
+    const profile = await Teacher.findOne({user:userId});
     return profile;
 }
 
