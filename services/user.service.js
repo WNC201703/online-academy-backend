@@ -307,11 +307,15 @@ function parseUserId(request, isAdmin) {
 }
 
 async function getTeacherProfile(userId){
+    let resBody={};
     const profile=await teacherModel.getProfile(userId);
     if (!profile) return {
       name:'',introduction:''
     }
-    return profile;
+    resBody._id=userId;
+    resBody.name=profile.name;
+    resBody.introduction=profile.introduction;
+    return resBody;
 }
 
 async function putTeacherProfile(userId,data){
