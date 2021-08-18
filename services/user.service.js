@@ -15,7 +15,8 @@ const courseService = require('./course.service');
 const { generateAccessToken,generateRefreshToken } = require('./token.service');
 const ApiError = require('../utils/ApiError');
 const { ROLE, VERIFY_TOKEN_TYPE } = require('../utils/constants');
-const httpStatus = require('http-status')
+const httpStatus = require('http-status');
+const teacherModel = require("../models/teacher");
 
 async function signUp(body) {
   const { email, fullname, password } = body;
@@ -305,6 +306,20 @@ function parseUserId(request, isAdmin) {
   return paramUserId;
 }
 
+async function getTeacherProfile(userId){
+    const profile=await teacherModel.getProfile(userId);
+    if (!profile) return {
+      name:'',introduction:''
+    }
+    return profile;
+}
+
+async function putTeacherProfile(userId,data){
+  console.log(data);
+  const profile=await teacherModel.updateProfile(userId,data);
+  return profile;
+}
+
 module.exports = {
   parseUserId,
 
@@ -330,6 +345,9 @@ module.exports = {
   getCompletedLessons,
   completedLesson,
   deleteCompletedLesson,
+
+  putTeacherProfile,
+  getTeacherProfile,
 
   // join
 }

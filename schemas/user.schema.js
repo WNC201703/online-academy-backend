@@ -20,13 +20,19 @@ userSchemas.userLOGIN = Joi.object({
     password: Joi.string().min(6).required(),
 });
 
-userSchemas.userEmailVERIFICATION=Joi.object({
+userSchemas.userEmailVERIFICATION = Joi.object({
     email: Joi.string().email().required(),
 });
 
-userSchemas.userEmailPUT=Joi.object({
+userSchemas.userEmailPUT = Joi.object({
     currentPassword: Joi.string().min(6),
-    newEmail:  Joi.string().email().required(),
+    newEmail: Joi.string().email().required(),
+});
+
+
+userSchemas.teacherProfilePUT = Joi.object({
+    name: Joi.allow(),
+    introduction: Joi.allow(),
 });
 
 

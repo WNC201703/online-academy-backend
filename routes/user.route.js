@@ -323,4 +323,5 @@ router.post('/:userId/access-token/refresh',
     });
   })
 );
+
 module.exports = router;
