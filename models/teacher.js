@@ -3,13 +3,11 @@ const { Schema } = mongoose;
 const ObjectId = mongoose.Types.ObjectId;
 const teacherSchema = mongoose.Schema(
     {
-        user: { type: ObjectId, ref: 'User', required: true },
+        user: { type: ObjectId, ref: 'User', required: true ,unique:true},
         name: { type: String, required: true },
         introduction: { type: String, required: true }
     },
 );
-
-teacherSchema.index({ teacher: 1 }, { unique: true })
 
 const Teacher = mongoose.model('teacher', teacherSchema);
 
