@@ -4,14 +4,14 @@ const httpStatus = require('http-status')
 const transporter = nodemailer.createTransport({ 
   service: 'gmail',
   auth: {
-    user: 'camdung.banhbeo@gmail.com',
-    pass: 'Hieu@123',
+    user: 'hieuho12598@gmail.com',
+    pass: 'hieuho123',
   },
 });
 
 const sendTokenToCreateAccount = (verificationToken, email) => {
   const mailOptions = {
-    from: 'camdung.banhbeo@gmail.com',
+    from: 'hieuho12598@gmail.com',
     to: email,
     subject: 'Thư gửi tự động để xác nhận email',
     html: `<p>Vui lòng nhấn vào <a href="${process.env.API_URL}/confirm-email/${verificationToken}">link</a> sau để xác nhận email</p>`,
