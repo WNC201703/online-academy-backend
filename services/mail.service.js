@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const ApiError = require('../utils/ApiError');
 const httpStatus = require('http-status')
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({ 
   service: 'gmail',
   auth: {
     user: 'onlineacademy208@gmail.com',
