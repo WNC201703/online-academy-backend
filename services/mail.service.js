@@ -43,6 +43,6 @@ const sendTokenToUpdateEmail = (verificationToken, email) => {
 
 
 module.exports = { 
-  sendTokenToCreateAccount,
+  sendTokenToCreateAccount ,
   sendTokenToUpdateEmail 
 };
