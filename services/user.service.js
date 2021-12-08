@@ -318,7 +318,7 @@ async function getTeacherProfile(userId) {
 
   const courses = await Course.find({ teacher: userId }).select('_id');
   const coursesId = courses.map(item => item._id);
-  resBody.courses = coursesId ? coursesId?.length : 0;
+  resBody.courses = coursesId ? coursesId.length : 0;
   const students = await Enrollment.countDocuments({ course: { $in: coursesId } });
   resBody.students = students;
   const reviews = await Review.countDocuments({ course: { $in: coursesId } });

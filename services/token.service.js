@@ -6,7 +6,6 @@ const httpStatus = require('http-status');
 const getAccessToken = (req) => {
     const authorization = req.header('Authorization');
     if (!authorization) throw new ApiError(httpStatus.UNAUTHORIZED,'Access Denied');
-    // return res.status(httpStatus.UNAUTHORIZED).send('Access Denied');
     const token = authorization.split(' ')[1];
     return token;
 }
